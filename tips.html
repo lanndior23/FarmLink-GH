@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farming Tips – FarmLink GH</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" type="image/png" href="assets/favicon.png" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #f4f9f4, #e9f5e9);
+      color: #333;
+    }
+
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('../assets/farm-bg.jpg');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.08;
+      z-index: -1;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      padding: 30px 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2.4rem;
+      margin-bottom: 30px;
+      color: #2e7d32;
+    }
+
+    .tip-card {
+      background: #ffffff;
+      padding: 20px;
+      margin: 20px 0;
+      border-left: 5px solid #66bb6a;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .tip-card h3 {
+      margin-top: 0;
+      color: #2e7d32;
+      font-size: 1.3rem;
+    }
+
+    .tip-card ul {
+      padding-left: 20px;
+    }
+
+    .tip-card li {
+      margin-bottom: 8px;
+      line-height: 1.5;
+    }
+
+    #postTipForm {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    #tipText {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    #postTipForm button {
+      background-color: #2e7d32;
+      color: white;
+      border: none;
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #postTipForm button:hover {
+      background-color: #1b5e20;
+    }
+
+    small {
+      color: #888;
+    }
+
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.8rem;
+      }
+      .container {
+        padding: 20px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay"></div>
+  <div class="container">
+    <h1>🌿 Professional Farming Tips</h1>
+
+    <div id="tipPostSection" style="display: none;">
+      <h3>📤 Post a New Tip</h3>
+      <form id="postTipForm">
+        <textarea id="tipText" placeholder="Enter your farming tip..." required></textarea>
+        <button type="submit">Post Tip</button>
+      </form>
+    </div>
+
+    <hr />
+    <div id="tipsContainer">
+      <!-- Static Tips -->
+      <div class="tip-card">
+        <h3>🌱 Soil Health & Preparation</h3>
+        <ul>
+          <li><strong>Test Your Soil:</strong> Use a kit or service to check pH and nutrients. Ideal: 6.0–7.0.</li>
+          <li><strong>Apply Organic Matter:</strong> Add compost or manure to improve soil structure.</li>
+          <li><strong>Practice Crop Rotation:</strong> Reduce pest buildup and improve soil health.</li>
+        </ul>
+      </div>
+
+      <div class="tip-card">
+        <h3>🌾 Planting & Crop Management</h3>
+        <ul>
+          <li><strong>Use Improved Seeds:</strong> Select high-yield, disease-resistant local varieties.</li>
+          <li><strong>Correct Spacing:</strong> Avoid overcrowding to prevent disease and increase yield.</li>
+          <li><strong>Time Your Planting:</strong> Align planting with rainy seasons (March & August in Ghana).</li>
+        </ul>
+      </div>
+
+      <div class="tip-card">
+        <h3>💧 Water Management</h3>
+        <ul>
+          <li><strong>Practice Mulching:</strong> Retains moisture and suppresses weeds.</li>
+          <li><strong>Irrigate Wisely:</strong> Water early morning/evening using drip or furrow systems.</li>
+        </ul>
+      </div>
+
+      <div class="tip-card">
+        <h3>🐛 Pest & Disease Control</h3>
+        <ul>
+          <li><strong>Monitor Regularly:</strong> Detect issues early by inspecting leaves and stems.</li>
+          <li><strong>Use Natural Remedies:</strong> Neem, garlic, or pepper sprays are safe options.</li>
+          <li><strong>Responsible Chemical Use:</strong> Rotate pesticides and wear safety gear.</li>
+        </ul>
+      </div>
+
+      <div class="tip-card">
+        <h3>🚜 Harvesting & Post-Harvest</h3>
+        <ul>
+          <li><strong>Harvest on Time:</strong> Avoid over-ripening and damage by birds or pests.</li>
+          <li><strong>Dry Properly:</strong> Use raised platforms to prevent mold and rot.</li>
+          <li><strong>Use Clean Storage:</strong> Hermetic bags like PICS protect grains from moisture and pests.</li>
+        </ul>
+      </div>
+
+      <div class="tip-card">
+        <h3>📈 Business & Marketing</h3>
+        <ul>
+          <li><strong>Keep Records:</strong> Track expenses, yields, and profits to measure growth.</li>
+          <li><strong>Join a Farmer Group:</strong> Access training, inputs, and better market prices.</li>
+          <li><strong>Use Technology:</strong> Use apps like <em>FarmLink GH</em> for weather, tips, and finding buyers.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js"></script>
+  <script src="firebase/config.js"></script>
+  <script>
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const db = firebase.firestore();
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      const role = userDoc.data().role;
+
+      if (role === 'farmer' || role === 'admin') {
+        document.getElementById('tipPostSection').style.display = 'block';
+
+        document.getElementById('postTipForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const tip = document.getElementById('tipText').value;
+          await db.collection('tips').add({
+            text: tip,
+            author: userDoc.data().name,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          document.getElementById('tipText').value = '';
+          loadTips();
+        });
+      }
+
+      loadTips();
+    });
+
+    async function loadTips() {
+      const container = document.getElementById('tipsContainer');
+
+      const snapshot = await firebase.firestore().collection('tips').orderBy('createdAt', 'desc').get();
+      snapshot.forEach(doc => {
+        const tip = doc.data();
+        container.innerHTML += `
+          <div class="tip-card">
+            <p>${tip.text}</p>
+            <small>— ${tip.author || 'Unknown'}</small>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>

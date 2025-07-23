@@ -1,0 +1,126 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: url('/assets/index.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #fff;
+  position: relative;
+  min-height: 100vh;
+}
+
+.overlay {
+  position: fixed;
+  top: 0; left: 0;
+  height: 200vh;
+  width: 200vw;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  z-index: -1;
+}
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(8, 7, 7, 0.7);
+  padding: 10px 20px;
+}
+
+.navbar a {
+  color: #fff;
+  margin-left: 15px;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.hero {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.weather-card {
+  margin-top: 20px;
+  padding: 15px;
+  background: rgba(32, 30, 30, 0.027);
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+.search-bar {
+  text-align: center;
+  margin: 30px;
+}
+
+.search-bar input {
+  width: 60%;
+  padding: 10px;
+  border-radius: 25px;
+  border: none;
+  font-size: 16px;
+}
+
+.crop-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.crop-card {
+  background: rgba(10, 2, 2, 0.76);
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.crop-card h3 {
+  margin-top: 0;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  background: rgba(0,0,0,0.7);
+  position: relative;
+  bottom: 0;
+  width: 100%;
+}
+
+
+.tips-link {
+  text-align: center;
+  margin: 20px 0;
+}
+
+.btn-tips {
+  background-color: #2e7d32;
+  color: #fff;
+  padding: 12px 24px;
+  font-size: 16px;
+  text-decoration: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.3s ease;
+}
+
+.btn-tips:hover {
+  background-color: #1b5e20;
+}
+
+.weather-card {
+  background: #fff;
+  color: #333;
+  padding: 15px;
+  margin: 20px auto;
+  max-width: 400px;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.weather-card h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #2e7d32;
+}

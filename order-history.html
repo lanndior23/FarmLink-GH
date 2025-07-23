@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Order History – FarmLink GH</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="icon" href="/assets/icon.ico" />
+</head>
+<body>
+  <div class="overlay"></div>
+  <header class="dashboard-header">
+    <h1>📦 My Order History</h1>
+    <nav>
+      <a href="buyer_dashboard.html">← Back to Dashboard</a>
+      <a href="#" onclick="handleLogout()">Logout</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-container">
+    <section class="order-history">
+      <h2>📝 Orders You've Made</h2>
+      <div class="order-list" id="orderHistoryList">
+        <p>Loading your orders...</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 FarmLink GH</p>
+  </footer>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- Config and Script -->
+  <script src="firebase/config.js"></script>
+  <script>
+    const db = firebase.firestore();
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const orderList = document.getElementById("orderHistoryList");
+        db.collection("orders").where("buyerId", "==", user.uid)
+          .orderBy("timestamp", "desc")
+          .onSnapshot(snapshot => {
+            orderList.innerHTML = "";
+            if (snapshot.empty) {
+              orderList.innerHTML = "<p>You haven't placed any orders yet.</p>";
+              return;
+            }
+            snapshot.forEach(doc => {
+              const data = doc.data();
+              const orderItem = document.createElement("div");
+              orderItem.className = "order-item";
+              orderItem.innerHTML = `
+                <strong>${data.cropName}</strong> <br>
+                <small>Ordered on: ${new Date(data.timestamp?.toDate()).toLocaleString()}</small>
+              `;
+              orderList.appendChild(orderItem);
+            });
+          });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function handleLogout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "login.html";
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmLink GH – Connect Ghanaian Farmers</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/assets/icon.ico" />
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <header class="navbar">
+    <h1>🌾 FarmLink GH</h1>
+    <nav>
+      <a href="login.html">Login</a>
+      <a href="register.html">Register</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h2>Connecting Farmers with Buyers</h2>
+    <p>Buy fresh. Support local. Learn farming tips from experts.</p>
+    <div class="weather-card" id="weather"></div>
+  </section>
+
+  <section class="search-bar">
+    <input type="text" id="searchInput" placeholder="🔍 Search crops..." />
+  </section>
+
+  <section class="crop-list" id="cropList">
+    <!-- Crops will be injected here by JS -->
+  </section>
+
+  <section class="tips-link">
+    <a href="tips.html" class="btn-tips">📚 View Farming Tips</a>
+  </section>
+
+  <footer>
+    <p>&copy; 2025 FarmLink GH. Powered by Famlink GH.</p>
+  </footer>
+
+  <script src="firebase/config.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

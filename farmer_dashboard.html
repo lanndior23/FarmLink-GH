@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmLink GH Dashboard</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="icon" href="/assets/icon.ico">
+</head>
+<body>
+  <div class="overlay"></div>
+
+  <header class="dashboard-header">
+    <h1>🌾 FarmLink GH Dashboard</h1>
+    <nav>
+      <a href="#profile">👤 Profile</a>
+      <a href="#" onclick="handleLogout()">🚪 Logout</a>
+    </nav>
+  </header>
+
+  <main class="dashboard-container">
+    <!-- Overview Section -->
+    <section class="overview">
+      <h2>Welcome, <span id="username">Farmer</span></h2>
+      <div class="stats">
+        <div class="stat-box">✅ Active Listings: <strong>12</strong></div>
+        <div class="stat-box">📦 Sold Products: <strong>8</strong></div>
+        <div class="stat-box">💬 New Messages: <strong>3</strong></div>
+        <div class="stat-box">🌿 Tips Posted: <strong>5</strong></div>
+      </div>
+    </section>
+
+    <!-- Market Listings -->
+    <section class="market">
+      <h3>🛒 Market Listings</h3>
+      <button class="btn">📥 Add New Crop</button>
+      <div class="crop-grid" id="cropListings">
+        <!-- Listings populated dynamically -->
+      </div>
+    </section>
+
+    <!-- Tips -->
+    <section class="tips">
+      <h3>💡 Farming Tips & Advice</h3>
+      <input type="text" placeholder="Search tips by category..." class="search-input"/>
+      <div class="tips-list" id="tipsList">
+        <!-- Tips dynamically inserted here -->
+      </div>
+      <button class="btn">➕ Post Tip</button>
+    </section>
+
+    <!-- Messages -->
+    <section class="messages">
+      <h3>📩 Messages</h3>
+      <div class="chat-box">
+        <div class="chat-messages" id="chatMessages">
+          <!-- Messages go here -->
+        </div>
+        <input type="text" placeholder="Type a message..." class="chat-input">
+      </div>
+    </section>
+
+    <!-- Location & Weather -->
+    <section class="location-weather">
+      <h3>📍 Location & Weather</h3>
+      <div class="location-weather-wrapper">
+        <div class="map" id="map">🗺️ Loading map...</div>
+        <div class="weather" id="weather">🌦️ Loading weather...</div>
+      </div>
+    </section>
+
+    <!-- Profile -->
+    <section class="profile" id="profile">
+      <h3>👤 Profile Management</h3>
+      <form>
+        <input type="text" placeholder="Full Name"/>
+        <input type="text" placeholder="Farm Type"/>
+        <input type="text" placeholder="Location"/>
+        <input type="password" placeholder="Change Password"/>
+        <input type="file"/>
+        <button class="btn">Update Profile</button>
+      </form>
+    </section>
+
+    <!-- Analytics -->
+    <section class="analytics">
+      <h3>📈 Reports & Analytics</h3>
+      <div class="report-box">
+        <p>Weekly Sales: <strong>GHS 1,200</strong></p>
+        <p>Monthly Sales: <strong>GHS 5,300</strong></p>
+        <p>Most Demanded Crop: <strong>Maize</strong></p>
+        <p>Buyer Engagements: <strong>18</strong></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 FarmLink GH. All rights reserved.</p>
+  </footer>
+
+  <!-- Firebase SDKs (must be above your app.js) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- Your Firebase config -->
+  <script src="firebase/config.js"></script>
+
+  <!-- Your custom JavaScript file -->
+  <script src="js/app.js"></script>
+
+  <!-- Logout & Auth Handling Script -->
+  <script>
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        firebase.firestore().collection("users").doc(user.uid).get()
+          .then(doc => {
+            if (doc.exists) {
+              const role = doc.data().role;
+              if (role !== "farmer") {
+                window.location.href = "buyer_dashboard.html";
+              }
+            }
+          });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    function handleLogout() {
+      firebase.auth().signOut()
+        .then(() => window.location.href = "login.html")
+        .catch(err => alert("Logout failed: " + err.message));
+    }
+  </script>
+
+</body>
+</html>

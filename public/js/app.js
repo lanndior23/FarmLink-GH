@@ -12,14 +12,31 @@ document.addEventListener('DOMContentLoaded', () => {
 let allCrops = [];
 
 function loadCrops() {
-  // Simulated crop data; replace with Firestore later
   allCrops = [
-    { name: 'Tomatoes', region: 'Volta', price: 'GH₵100/basket' },
+    { name: 'Maize', region: 'Brong-Ahafo', price: 'GH₵50/bag' },
+    { name: 'Rice', region: 'Northern', price: 'GH₵120/bag' },
     { name: 'Cassava', region: 'Ashanti', price: 'GH₵60/sack' },
+    { name: 'Yam', region: 'Northern', price: 'GH₵150/heap' },
+    { name: 'Tomatoes', region: 'Volta', price: 'GH₵100/basket' },
+    { name: 'Onions', region: 'Upper East', price: 'GH₵90/sack' },
+    { name: 'Cabbage', region: 'Greater Accra', price: 'GH₵30/head' },
+    { name: 'Okra', region: 'Central', price: 'GH₵25/basket' },
+    { name: 'Pepper', region: 'Eastern', price: 'GH₵40/basket' },
     { name: 'Plantain', region: 'Eastern', price: 'GH₵80/bunch' },
+    { name: 'Cocoa', region: 'Western', price: 'GH₵800/bag' },
+    { name: 'Pineapple', region: 'Central', price: 'GH₵6/fruit' },
+    { name: 'Banana', region: 'Ashanti', price: 'GH₵70/bunch' },
+    { name: 'Sweet Potato', region: 'Upper West', price: 'GH₵50/sack' },
+    { name: 'Groundnuts', region: 'Northern', price: 'GH₵95/sack' },
+    { name: 'Watermelon', region: 'Greater Accra', price: 'GH₵20/fruit' },
+    { name: 'Mango', region: 'Brong-Ahafo', price: 'GH₵5/fruit' },
+    { name: 'Cocoyam', region: 'Eastern', price: 'GH₵60/sack' },
+    { name: 'Soybeans', region: 'Northern', price: 'GH₵100/bag' },
+    { name: 'Millet', region: 'Upper East', price: 'GH₵85/bag' }
   ];
   displayCrops(allCrops);
 }
+
 
 function displayCrops(crops) {
   const cropList = document.getElementById('cropList');

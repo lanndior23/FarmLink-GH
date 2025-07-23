@@ -124,3 +124,47 @@ footer {
   font-size: 20px;
   color: #2e7d32;
 }
+
+/* Style for region selector */
+#regionSelect {
+  display: block;
+  margin: 16px auto 8px auto;
+  padding: 8px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: 1px solid #2e7d32;
+  background: #fff;
+  color: #2e7d32;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.08);
+  outline: none;
+  transition: border-color 0.3s;
+}
+
+#regionSelect:focus {
+  border-color: #1b5e20;
+}
+
+/* Weather card for selected region */
+.weather-card {
+  background: #fff;
+  color: #333;
+  padding: 18px 20px;
+  margin: 20px auto;
+  max-width: 400px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 14px rgba(46, 125, 50, 0.12);
+}
+
+.weather-card h4 {
+  margin-top: 0;
+  font-size: 22px;
+  color: #2e7d32;
+  font-weight: 600;
+}
+
+.weather-card p {
+  font-size: 18px;
+  margin: 8px 0 0 0;
+  color: #444;
+}

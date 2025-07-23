@@ -44,7 +44,7 @@ function filterCrops(keyword) {
 }
 
 function loadWeather() {
-  const apiKey = "YOUR_API_KEY"; // Get from https://openweathermap.org
+  const apiKey = "8ec390ef850bf6e41bf133f862f651c0"; // Get from https://openweathermap.org
   const city = "Accra";
   fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
     .then(res => res.json())

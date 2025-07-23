@@ -441,9 +441,9 @@ getWeather();
           const lat = position.coords.latitude;
           const lon = position.coords.longitude;
           const map = L.map('map').setView([lat, lon], 13);
-          L.tileLayer(`https://maps.geoapify.com/v1/tile/carto/{z}/{x}/{y}.png?&apiKey=7d31173ce4c14dd58e519364d8ca8652`, {
-                      attribution: '© OpenMapTiles © OpenStreetMap contributors'
-                    }).addTo(map);
+          L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-liberty/{z}/{x}/{y}.png?apiKey=7d31173ce4c14dd58e519364d8ca8652`, {
+            attribution: '© OpenMapTiles © OpenStreetMap contributors'
+          }).addTo(map);
           L.marker([lat, lon]).addTo(map)
             .bindPopup('You are here!')
             .openPopup();

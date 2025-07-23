@@ -97,17 +97,17 @@ function loadWeather() {
 }
 
  // Load weather for default region on page load
-  loadWeatherByCity(document.getElementById('regionSelect').value);
+  loadWeatherByCity('Kumasi');
 
   // Change weather when region changes
-  document.getElementById('regionSelect').addEventListener('change', function() {
-    loadWeatherByCity(this.value);
-  });
+  // document.getElementById('regionSelect').addEventListener('change', function() {
+  //   loadWeatherByCity(this.value);
+  // });
 });
 
 function loadWeatherByCity(city) {
   const apiKey = "8ec390ef850bf6e41bf133f862f651c0";
-  fetch(`https://api.openweathermap.org/data/2.5/weather?q=${kumasi}&appid=${apiKey}&units=metric`)
+  fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
     .then(res => res.json())
     .then(data => {
       const weatherDiv = document.getElementById('weather');

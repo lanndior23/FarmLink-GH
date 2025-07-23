@@ -97,6 +97,42 @@ function loadWeather() {
   }
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('cityWeatherForm');
+  const input = document.getElementById('cityInput');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const city = input.value.trim();
+    if (city) {
+      loadWeatherByCity(city);
+    }
+  });
+
+  // Optionally, load default weather for Accra on page load
+  loadWeatherByCity('Accra');
+});
+
+function loadWeatherByCity(city) {
+  const apiKey = "8ec390ef850bf6e41bf133f862f651c0";
+  fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city},GH&appid=${apiKey}&units=metric`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.cod === 200) {
+        const weatherDiv = document.getElementById('weather');
+        weatherDiv.innerHTML = `
+          <h4>🌤 Weather in ${data.name}</h4>
+          <p>${data.weather[0].main}, ${data.main.temp}°C</p>
+        `;
+      } else {
+        document.getElementById('weather').innerHTML = 'City not found or weather unavailable.';
+      }
+    })
+    .catch(() => {
+      document.getElementById('weather').innerHTML = 'Weather unavailable.';
+    });
+}
+
 // Firebase Login
 const auth = firebase.auth();
 const db = firebase.firestore();

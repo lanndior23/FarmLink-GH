@@ -18,12 +18,15 @@
     </nav>
   </header>
 
-  <section class="hero">
-    <h2>Connecting Farmers with Buyers</h2>
-    <p>Buy fresh. Support local. Learn farming tips from experts.</p>
-    <div class="weather-card" id="weather"></div>
-  
-  </section>
+<section class="hero">
+  <h2>Connecting Farmers with Buyers</h2>
+  <p>Buy fresh. Support local. Learn farming tips from experts.</p>
+  <form id="cityWeatherForm" style="margin-bottom: 12px;">
+    <input type="text" id="cityInput" placeholder="Enter Ghanaian city..." style="padding: 8px; border-radius: 8px; border: 1px solid #2e7d32; width: 220px;" />
+    <button type="submit" style="padding: 8px 16px; border-radius: 8px; background: #2e7d32; color: #fff; border: none;">Check Weather</button>
+  </form>
+  <div class="weather-card" id="weather"></div>
+</section>
 
   <section class="search-bar">
     <input type="text" id="searchInput" placeholder="🔍 Search crops..." />

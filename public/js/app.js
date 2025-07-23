@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   searchInput.addEventListener('input', () => {
     const keyword = searchInput.value.toLowerCase();
     filterCrops(keyword);
+  });
 });
 
 let allCrops = [];
@@ -43,70 +44,8 @@ function filterCrops(keyword) {
 }
 
 function loadWeather() {
-  const apiKey = "8ec390ef850bf6e41bf133f862f651c0"; // OpenWeather API key
-
-  if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        const lat = position.coords.latitude;
-        const lon = position.coords.longitude;
-        fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`)
-          .then(res => res.json())
-          .then(data => {
-            const weatherDiv = document.getElementById('weather');
-            weatherDiv.innerHTML = `
-              <h4>🌤 Weather in ${data.name}</h4>
-              <p>${data.weather[0].main}, ${data.main.temp}°C</p>
-            `;
-          })
-          .catch(() => {
-            document.getElementById('weather').innerHTML = 'Weather unavailable.';
-          });
-      },
-      () => {
-        // If location denied, fallback to Accra
-        fetch(`https://api.openweathermap.org/data/2.5/weather?q=Accra&appid=${apiKey}&units=metric`)
-          .then(res => res.json())
-          .then(data => {
-            const weatherDiv = document.getElementById('weather');
-            weatherDiv.innerHTML = `
-              <h4>🌤 Weather in ${data.name}</h4>
-              <p>${data.weather[0].main}, ${data.main.temp}°C</p>
-            `;
-          })
-          .catch(() => {
-            document.getElementById('weather').innerHTML = 'Weather unavailable.';
-          });
-      }
-    );
-  } else {
-    // If geolocation not supported, fallback to Accra
-    fetch(`https://api.openweathermap.org/data/2.5/weather?q=Accra&appid=${apiKey}&units=metric`)
-      .then(res => res.json())
-      .then(data => {
-        const weatherDiv = document.getElementById('weather');
-        weatherDiv.innerHTML = `
-          <h4>🌤 Weather in ${data.name}</h4>
-          <p>${data.weather[0].main}, ${data.main.temp}°C</p>
-        `;
-      })
-      .catch(() => {
-        document.getElementById('weather').innerHTML = 'Weather unavailable.';
-      });
-  }
-}
-
- // Load weather for default region on page load
-  loadWeatherByCity(document.getElementById('regionSelect').value);
-
-  // Change weather when region changes
-  document.getElementById('regionSelect').addEventListener('change', function() {
-    loadWeatherByCity(this.value);
-  });
-});
-
-function loadWeatherByCity(city) {
-  const apiKey = "8ec390ef850bf6e41bf133f862f651c0";
+  const apiKey = "8ec390ef850bf6e41bf133f862f651c0"; // Get from https://openweathermap.org
+  const city = "Accra";
   fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`)
     .then(res => res.json())
     .then(data => {

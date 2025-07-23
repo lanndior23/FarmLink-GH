@@ -10,12 +10,16 @@ A web platform connecting Ghanaian farmers with buyers and providing expert farm
 - Responsive UI
 
 ## 🚀 Live Demo
-🔗 https://your-project-id.web.app
+🔗 https://farmlink-gh.web.app
 
 ## 🛠️ Tech Stack
 - HTML, CSS (Material UI)
 - JavaScript
 - Firebase (Auth, Firestore, Hosting)
 
+##  Screenshot
+
+
+
 ## 👨‍💻 Developed By
-Desmond Attram – Diploma L200 Mobile App Dev Project 2024/2025
+

@@ -123,8 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const city = input.value.trim();
     if (city) {
       loadWeatherByCity(city);
-    }
-  });
+  }
 
   // Optionally, load default weather for Accra on page load
   loadWeatherByCity('Accra');
@@ -433,3 +432,28 @@ function fetchWeather(lat, lon) {
 
 // Call it on page load
 getWeather();
+
+ // Map loading for farmer dashboard using Geoapify
+  if (document.getElementById('map')) {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        position => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          const map = L.map('map').setView([lat, lon], 13);
+          L.tileLayer(`https://maps.geoapify.com/v1/tile/osm-liberty/{z}/{x}/{y}.png?apiKey=7d31173ce4c14dd58e519364d8ca8652`, {
+            attribution: '© OpenMapTiles © OpenStreetMap contributors'
+          }).addTo(map);
+          L.marker([lat, lon]).addTo(map)
+            .bindPopup('You are here!')
+            .openPopup();
+        },
+        () => {
+          document.getElementById('map').innerHTML = 'Location unavailable.';
+        }
+      );
+    } else {
+      document.getElementById('map').innerHTML = 'Geolocation not supported.';
+    }
+  }
+});

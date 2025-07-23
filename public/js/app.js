@@ -97,12 +97,12 @@ function loadWeather() {
 }
 
  // Load weather for default region on page load
-  loadWeatherByCity('Kumasi');
+  loadWeatherByCity(document.getElementById('regionSelect').value);
 
   // Change weather when region changes
-  // document.getElementById('regionSelect').addEventListener('change', function() {
-  //   loadWeatherByCity(this.value);
-  // });
+  document.getElementById('regionSelect').addEventListener('change', function() {
+    loadWeatherByCity(this.value);
+  });
 });
 
 function loadWeatherByCity(city) {

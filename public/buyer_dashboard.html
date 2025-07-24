@@ -160,8 +160,8 @@
     <span id="username">Welcome, Buyer</span>
     <a href="order-history.html">Order History</a>
     <a href="#" onclick="handleLogout()">Logout</a>
-    <a href="chat.html?to=FARMER_UID">Chat with Farmer</a>
-</div>
+    <a href="chat.html?to=FARMER_UID" id="chatLink">Chat with Farmer</a>
+  </div>
 
   <div class="container">
     <div class="welcome">👋 Hello, <span id="usernameDashboard">Buyer</span></div>
@@ -342,6 +342,25 @@
         alert("❌ Failed to place order: " + err.message);
       });
     }
+
+    // Add this block at the end of your script
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        firebase.firestore().collection("users")
+          .where("role", "==", "farmer")
+          .limit(1)
+          .get()
+          .then(snapshot => {
+            if (!snapshot.empty) {
+              const targetUser = snapshot.docs[0];
+              const chatLink = document.getElementById("chatLink");
+              if (chatLink) {
+                chatLink.href = `chat.html?to=${targetUser.id}`;
+              }
+            }
+          });
+      }
+    });
   </script>
 </body>
 </html>

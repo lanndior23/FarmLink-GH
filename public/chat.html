@@ -35,6 +35,8 @@
       border-radius: 8px;
       padding: 10px;
       background: #f9f9f9;
+      display: flex;
+      flex-direction: column;
     }
 
     .message {
@@ -42,6 +44,7 @@
       padding: 8px 12px;
       border-radius: 6px;
       max-width: 75%;
+      word-wrap: break-word;
     }
 
     .sent {
@@ -97,10 +100,12 @@
     </form>
   </div>
 
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script src="firebase/config.js"></script>
+
   <script>
     const auth = firebase.auth();
     const db = firebase.firestore();
@@ -111,26 +116,27 @@
     const receiverName = document.getElementById("receiverName");
 
     const urlParams = new URLSearchParams(window.location.search);
-    const to = urlParams.get("to"); // recipient UID
+    const to = urlParams.get("to");
 
     if (!to) {
-      alert("No chat user specified.");
+      alert("❌ No chat user specified.");
       window.location.href = "buyer_dashboard.html";
     }
 
     auth.onAuthStateChanged(async user => {
-      if (!user) {
-        return window.location.href = "login.html";
-      }
-
+      if (!user) return window.location.href = "login.html";
       const from = user.uid;
 
-      // Show receiver label
-      const userDoc = await db.collection("users").doc(to).get();
-      const userData = userDoc.data();
-      receiverName.textContent = `Chatting with: ${userData.fullName || 'User'}`;
+      // Show receiver's name
+      try {
+        const userDoc = await db.collection("users").doc(to).get();
+        const userData = userDoc.data();
+        receiverName.textContent = `Chatting with: ${userData?.fullName || 'User'}`;
+      } catch (err) {
+        receiverName.textContent = "Chatting with user";
+      }
 
-      // Fetch & display messages
+      // Fetch messages
       db.collection("messages")
         .where("participants", "array-contains", from)
         .orderBy("timestamp")
@@ -138,37 +144,31 @@
           chatBox.innerHTML = "";
           snapshot.forEach(doc => {
             const msg = doc.data();
-            if (
-              (msg.from === from && msg.to === to) ||
-              (msg.from === to && msg.to === from)
-            ) {
+            const isRelevant = (msg.from === from && msg.to === to) || (msg.from === to && msg.to === from);
+            if (isRelevant) {
               const msgDiv = document.createElement("div");
-              msgDiv.classList.add("message");
-              msgDiv.classList.add(msg.from === from ? "sent" : "received");
+              msgDiv.classList.add("message", msg.from === from ? "sent" : "received");
               msgDiv.textContent = msg.text;
               chatBox.appendChild(msgDiv);
             }
           });
-
           chatBox.scrollTop = chatBox.scrollHeight;
         });
 
       // Send message
       chatForm.addEventListener("submit", async e => {
         e.preventDefault();
-
-        const message = chatInput.value.trim();
-        if (message === "") return;
+        const text = chatInput.value.trim();
+        if (!text) return;
 
         await db.collection("messages").add({
-          from: from,
-          to: to,
-          text: message,
+          from,
+          to,
+          text,
           participants: [from, to],
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        localStorage.setItem("lastSeenMessageId", Date.now().toString());
         chatInput.value = "";
       });
     });

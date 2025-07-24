@@ -111,14 +111,11 @@
       cropList.appendChild(card);
     });
 
-    function placeOrder(cropName) {
-      alert("You selected: " + cropName + ". Proceed to complete order flow here.");
-     function placeOrder(cropName) {
+function placeOrder(cropName) {
   firebase.auth().onAuthStateChanged(user => {
     if (user) {
       const buyerId = user.uid;
       const buyerName = user.displayName || user.email || "Anonymous";
-      const timestamp = new Date();
 
       firebase.firestore().collection("orders").add({
         cropName: cropName,
@@ -134,12 +131,11 @@
         alert("Something went wrong while placing the order.");
       });
     } else {
-      alert("You must be logged in to place an order.");
+      alert("⚠️ You must be logged in to place an order.");
     }
   });
 }
 
-    }
   </script>
 </body>
 </html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmLink GH – Order Crops</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script src="firebase/config.js" defer></script>
+  <script src="js/order.js" defer></script>
+  <style>
+    .crop-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 10px 0;
+      background: #fdfdfd;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .crop-card img {
+      max-width: 100px;
+      border-radius: 6px;
+      margin-right: 10px;
+    }
+    .order-btn {
+      background: #007b5e;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Available Crops</h2>
+  <div id="cropList"></div>
+
+  <script>
+    // This part displays crops and handles ordering
+  </script>
+</body>
+</html>

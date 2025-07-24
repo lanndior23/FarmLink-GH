@@ -1,137 +1,100 @@
-// Firestore references
-const db = firebase.firestore();
+
+// Initialize Firebase (make sure firebase.initializeApp(...) is already done in firebase/config.js)
 const auth = firebase.auth();
+const db = firebase.firestore();
 
-// Load Available Crops from Firestore
-function loadAvailableCrops() {
-  const cropGrid = document.getElementById("availableCrops");
-  cropGrid.innerHTML = `<p>Loading crops...</p>`;
+// On Auth State Change
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    const userId = user.uid;
 
-  db.collection("crops").get()
+    // Fetch user role
+    const userDoc = await db.collection("users").doc(userId).get();
+    const userData = userDoc.data();
+
+    // Redirect if not a buyer
+    if (userData.role !== "buyer") {
+      alert("Unauthorized access – Only buyers can access this page.");
+      return window.location.href = "login.html";
+    }
+
+    // Display buyer name
+    const welcomeEl = document.getElementById("welcomeBuyer");
+    if (welcomeEl) welcomeEl.textContent = `Welcome, ${userData.fullName}`;
+
+    // Load Crops
+    loadCrops();
+
+    // Real-time message notifications
+    const messagesCount = document.getElementById("messagesCount");
+    const newMsgBadge = document.getElementById("newMsgBadge");
+    const chatDot = document.getElementById("chatDot");
+
+    db.collection("messages")
+      .where("to", "==", userId)
+      .orderBy("timestamp", "desc")
+      .onSnapshot(snapshot => {
+        if (messagesCount) messagesCount.textContent = snapshot.size;
+
+        if (!snapshot.empty) {
+          const latestMsg = snapshot.docs[0];
+          const latestMsgId = latestMsg.id;
+          const lastSeenId = localStorage.getItem("lastSeenMessageId");
+
+          if (latestMsgId !== lastSeenId) {
+            if (newMsgBadge) newMsgBadge.style.display = "inline-block";
+            if (chatDot) chatDot.style.display = "inline";
+          } else {
+            if (newMsgBadge) newMsgBadge.style.display = "none";
+            if (chatDot) chatDot.style.display = "none";
+          }
+        }
+      });
+
+  } else {
+    // If not logged in
+    window.location.href = "login.html";
+  }
+});
+
+// Load crops from Firestore
+function loadCrops() {
+  const cropList = document.getElementById("cropList");
+  cropList.innerHTML = "<p>Loading crops...</p>";
+
+  db.collection("crops").orderBy("timestamp", "desc").get()
     .then(snapshot => {
-      cropGrid.innerHTML = "";
+      cropList.innerHTML = "";
+
       if (snapshot.empty) {
-        cropGrid.innerHTML = `<p>No crops available right now.</p>`;
+        cropList.innerHTML = "<p>No crops available at the moment.</p>";
         return;
       }
 
       snapshot.forEach(doc => {
         const crop = doc.data();
+
         const cropCard = document.createElement("div");
         cropCard.className = "crop-card";
         cropCard.innerHTML = `
-          <h4>${crop.name}</h4>
-          <p>Price: GHS ${crop.price}</p>
-          <p>Farmer: ${crop.farmerName}</p>
-          <button onclick="orderCrop('${doc.id}', '${crop.farmerId}', '${crop.name}', ${crop.price})">Order</button>
+          <img src="${crop.image || 'assets/default_crop.jpg'}" alt="${crop.name}" class="crop-img"/>
+          <h3>${crop.name}</h3>
+          <p>Region: ${crop.region}</p>
+          <p>Price: ${crop.price}</p>
+          <button onclick="orderCrop('${doc.id}')">Place Order</button>
         `;
-        cropGrid.appendChild(cropCard);
+
+        cropList.appendChild(cropCard);
       });
     })
     .catch(error => {
-      cropGrid.innerHTML = `<p>Failed to load crops. Try again later.</p>`;
       console.error("Error loading crops:", error);
+      cropList.innerHTML = "<p>Error loading crops. Please try again.</p>";
     });
 }
 
-// Order Crop (Placeholder Logic)
-function orderCrop(cropId, farmerId, cropName, cropPrice) {
-  const buyer = auth.currentUser;
-  if (!buyer) return alert("Login required to order");
-
-  const orderData = {
-    cropId,
-    cropName,
-    cropPrice,
-    buyerId: buyer.uid,
-    buyerEmail: buyer.email,
-    farmerId,
-    status: "pending",
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-  };
-
-  db.collection("orders").add(orderData)
-    .then(() => {
-      alert(`Order placed for ${cropName}. You can now chat with the farmer.`);
-      openChatWithFarmer(farmerId);
-    })
-    .catch(err => {
-      console.error("Order failed", err);
-      alert("Failed to place order. Try again.");
-    });
+// Handle order click
+function orderCrop(cropId) {
+  // Redirect to order page or show modal
+  window.location.href = `order.html?crop=${cropId}`;
 }
-
-// Open Chat Interface
-function openChatWithFarmer(farmerId) {
-  const buyerId = auth.currentUser.uid;
-  const chatId = [buyerId, farmerId].sort().join("_");
-
-  const chatBox = document.getElementById("chatBox");
-  chatBox.style.display = "block";
-  const chatWindow = document.getElementById("chatWindow");
-  const chatInput = document.getElementById("chatInput");
-
-  // Listen for real-time messages
-  db.collection("chats").doc(chatId).collection("messages")
-    .orderBy("timestamp")
-    .onSnapshot(snapshot => {
-      chatWindow.innerHTML = "";
-      snapshot.forEach(doc => {
-        const msg = doc.data();
-        const bubble = document.createElement("div");
-        bubble.className = msg.sender === buyerId ? "msg-bubble me" : "msg-bubble other";
-        bubble.textContent = msg.text;
-        chatWindow.appendChild(bubble);
-      });
-      chatWindow.scrollTop = chatWindow.scrollHeight;
-    });
-
-  // Send Message
-  document.getElementById("sendBtn").onclick = () => {
-    const text = chatInput.value.trim();
-    if (!text) return;
-    db.collection("chats").doc(chatId).collection("messages").add({
-      sender: buyerId,
-      text,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    chatInput.value = "";
-  };
-}
-
-
-// Real-time message badge logic
-window.addEventListener("DOMContentLoaded", () => {
-  loadAvailableCrops();
-
-  firebase.auth().onAuthStateChanged(user => {
-    if (user) {
-      const messagesCount = document.getElementById("messagesCount");
-      const newMsgBadge = document.getElementById("newMsgBadge");
-      const chatDot = document.getElementById("chatDot");
-
-      db.collection("messages")
-        .where("to", "==", user.uid)
-        .orderBy("timestamp", "desc")
-        .onSnapshot(snapshot => {
-          if (messagesCount) messagesCount.textContent = snapshot.size;
-
-          if (!snapshot.empty) {
-            const latestMsg = snapshot.docs[0];
-            const latestMsgId = latestMsg.id;
-            const lastSeenId = localStorage.getItem("lastSeenMessageId");
-
-            if (latestMsgId !== lastSeenId) {
-              if (newMsgBadge) newMsgBadge.style.display = "inline-block";
-              if (chatDot) chatDot.style.display = "inline";
-            } else {
-              if (newMsgBadge) newMsgBadge.style.display = "none";
-              if (chatDot) chatDot.style.display = "none";
-            }
-          }
-        });
-    } else {
-      window.location.href = "login.html";
-    }
-  });
-});

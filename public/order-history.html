@@ -6,6 +6,37 @@
   <title>Order History – FarmLink GH</title>
   <link rel="stylesheet" href="css/dashboard.css" />
   <link rel="icon" href="/assets/icon.ico" />
+  <style>
+    .order-item {
+      background: #f9f9f9;
+      border-left: 4px solid #4caf50;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    .progress-bar {
+      background: #e0e0e0;
+      border-radius: 20px;
+      overflow: hidden;
+      height: 10px;
+      margin-top: 10px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #4caf50;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .status-label {
+      font-size: 0.9em;
+      margin-top: 5px;
+      color: #555;
+    }
+  </style>
 </head>
 <body>
   <div class="overlay"></div>
@@ -40,10 +71,18 @@
   <script>
     const db = firebase.firestore();
 
+    const statusStages = {
+      "placed": { label: "Order Placed", progress: 25 },
+      "confirmed": { label: "Confirmed by Farmer", progress: 50 },
+      "in_transit": { label: "In Transit", progress: 75 },
+      "delivered": { label: "Delivered", progress: 100 }
+    };
+
     firebase.auth().onAuthStateChanged(user => {
       if (user) {
         const orderList = document.getElementById("orderHistoryList");
-        db.collection("orders").where("buyerId", "==", user.uid)
+        db.collection("orders")
+          .where("buyerId", "==", user.uid)
           .orderBy("timestamp", "desc")
           .onSnapshot(snapshot => {
             orderList.innerHTML = "";
@@ -51,13 +90,21 @@
               orderList.innerHTML = "<p>You haven't placed any orders yet.</p>";
               return;
             }
+
             snapshot.forEach(doc => {
               const data = doc.data();
+              const status = data.status || "placed";
+              const stage = statusStages[status] || statusStages["placed"];
               const orderItem = document.createElement("div");
               orderItem.className = "order-item";
+
               orderItem.innerHTML = `
-                <strong>${data.cropName}</strong> <br>
+                <strong>${data.cropName}</strong><br>
                 <small>Ordered on: ${new Date(data.timestamp?.toDate()).toLocaleString()}</small>
+                <div class="progress-bar">
+                  <div class="progress-bar-fill" style="width: ${stage.progress}%;"></div>
+                </div>
+                <div class="status-label">Status: ${stage.label}</div>
               `;
               orderList.appendChild(orderItem);
             });

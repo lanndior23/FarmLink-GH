@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FarmLink GH – Chat</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+    }
+    header {
+      background: #007b5f;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+    .chat-container {
+      max-width: 700px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      height: 80vh;
+    }
+    .messages {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+    .message {
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 10px;
+      max-width: 70%;
+    }
+    .sent {
+      background: #dcf8c6;
+      margin-left: auto;
+    }
+    .received {
+      background: #f1f1f1;
+      margin-right: auto;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ccc;
+    }
+    .chat-input input {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 0 0 0 10px;
+    }
+    .chat-input button {
+      padding: 12px 20px;
+      background: #007b5f;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 0 0 10px 0;
+    }
+    .chat-input input:focus {
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Live Chat with Farmer</h2>
+  </header>
+
+  <div class="chat-container">
+    <div class="messages" id="messages"></div>
+    <div class="chat-input">
+      <input type="text" id="messageInput" placeholder="Type your message..." />
+      <button onclick="sendMessage()">Send</button>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase/config.js"></script>
+
+  <script>
+    const farmerId = new URLSearchParams(window.location.search).get('farmerId');
+    const messagesDiv = document.getElementById('messages');
+    const input = document.getElementById('messageInput');
+
+    let user;
+
+    firebase.auth().onAuthStateChanged(u => {
+      if (!u) return window.location.href = "login.html";
+      user = u;
+
+      const db = firebase.firestore();
+      const chatId = [user.uid, farmerId].sort().join("_");
+
+      db.collection("chats").doc(chatId).collection("messages")
+        .orderBy("createdAt")
+        .onSnapshot(snapshot => {
+          messagesDiv.innerHTML = "";
+          snapshot.forEach(doc => {
+            const msg = doc.data();
+            const div = document.createElement('div');
+            div.className = `message ${msg.from === user.uid ? 'sent' : 'received'}`;
+            div.textContent = msg.text;
+            messagesDiv.appendChild(div);
+          });
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+    });
+
+    function sendMessage() {
+      const text = input.value.trim();
+      if (!text || !user || !farmerId) return;
+
+      const db = firebase.firestore();
+      const chatId = [user.uid, farmerId].sort().join("_");
+
+      db.collection("chats").doc(chatId).collection("messages").add({
+        from: user.uid,
+        to: farmerId,
+        text,
+        createdAt: new Date()
+      });
+
+      input.value = "";
+    }
+  </script>
+</body>
+</html>

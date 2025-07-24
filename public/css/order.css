@@ -12,6 +12,13 @@
   text-align: center;
   box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   transition: 0.3s;
+
+  /* Ensure cube shape */
+  aspect-ratio: 1 / 1; /* Keeps width and height equal */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .crop-card:hover {
@@ -22,5 +29,6 @@
 .crop-name {
   font-weight: bold;
   color: #2e7d32;
+  font-size: 16px;
+  margin-top: 8px;
 }
-

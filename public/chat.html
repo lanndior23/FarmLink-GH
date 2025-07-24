@@ -59,6 +59,7 @@
     <h2>💬 Farmer Chat Room</h2>
     <div id="userNameLabel" style="margin-bottom: 12px; font-weight: bold;"></div>
     <div id="chatMessages"></div>
+    <div id="chatContainer"></div>
 
     <div class="chat-input">
       <input type="text" id="chatMessage" placeholder="Type your message..." />
@@ -133,6 +134,11 @@
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
           });
+          // Set last seen message ID in localStorage
+          const lastMsg = snapshot.docs[snapshot.docs.length - 1];
+          if (lastMsg) {
+            localStorage.setItem("lastSeenMessageId", lastMsg.id);
+          }
         });
     }
 

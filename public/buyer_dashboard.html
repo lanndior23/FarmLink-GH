@@ -144,7 +144,8 @@
     <span id="username">Welcome, Buyer</span>
     <a href="order-history.html">Order History</a>
     <a href="#" onclick="handleLogout()">Logout</a>
-    <a href="chat.html">💬 Live Chat with Farmer</a>
+    <a href="chat.html" id="chatLink">💬 Live Chat with Farmer <span id="chatDot" style="display:none; color:red;">•</span></a>
+
   </div>
 
   <div class="container">
@@ -153,7 +154,10 @@
     <div class="stats">
       <div class="card">📦 Active Orders: <strong id="activeOrders">0</strong></div>
       <div class="card">🛍️ Total Orders: <strong id="totalOrders">0</strong></div>
-      <div class="card">💬 Messages: <strong id="messagesCount">0</strong></div>
+      <div class="card">
+        💬 Messages: <strong id="messagesCount">0</strong>
+        <span id="newMsgBadge" style="display:none; background:red; color:white; padding:2px 6px; border-radius:8px; font-size:0.8rem; margin-left:6px;">NEW</span>
+      </div>
     </div>
 
     <h2>🛒 All Available Crops</h2>
@@ -223,6 +227,24 @@
 
               db.collection("messages").where("to", "==", user.uid).get().then(snapshot => {
                 messagesCount.textContent = snapshot.size;
+                // Show NEW badge if there are unseen messages
+                const lastSeenId = localStorage.getItem("lastSeenMessageId");
+                let hasNew = false;
+                if (snapshot.size > 0 && lastSeenId) {
+                  // If any message is newer than lastSeenId
+                  for (let i = 0; i < snapshot.docs.length; i++) {
+                    if (snapshot.docs[i].id !== lastSeenId) {
+                      hasNew = true;
+                      break;
+                    } else {
+                      hasNew = false;
+                      break;
+                    }
+                  }
+                } else if (snapshot.size > 0 && !lastSeenId) {
+                  hasNew = true;
+                }
+                document.getElementById('newMsgBadge').style.display = hasNew ? '' : 'none';
               });
 
             } else {

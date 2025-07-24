@@ -57,6 +57,7 @@
 <body>
   <div class="chat-box">
     <h2>💬 Farmer Chat Room</h2>
+    <div id="userNameLabel" style="margin-bottom:10px;font-weight:bold;"></div>
     <div id="chatMessages"></div>
 
     <div class="chat-input">
@@ -81,15 +82,26 @@
     let currentUser = null;
     let userProfile = {};
 
-    firebase.auth().onAuthStateChanged(async user => {
-      if (!user) return (window.location.href = "login.html");
-      currentUser = user;
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (user) {
+        const userRef = await db.collection("users").doc(user.uid).get();
+        const userData = userRef.data();
 
-      // Get user role + name from Firestore
-      const userDoc = await db.collection("users").doc(user.uid).get();
-      userProfile = userDoc.data();
+        if (!userData) {
+          alert("No user data found. Please register again.");
+          document.querySelector(".chat-input button").disabled = true;
+          document.getElementById("chatMessage").disabled = true;
+          return;
+        }
 
-      listenForMessages();
+        const { name, role } = userData;
+        userProfile = userData;
+        document.getElementById("userNameLabel").textContent = `${role === 'farmer' ? '👩🏾‍🌾 Farmer' : '🧑🏿 Buyer'} ${name}`;
+
+        listenForMessages();
+      } else {
+        window.location.href = "login.html";
+      }
     });
 
     const chatBox = document.getElementById("chatMessages");
@@ -118,6 +130,12 @@
     }
 
     async function sendMessage() {
+      // Restrict sending if userProfile is missing
+      if (!userProfile || !userProfile.name || !userProfile.role) {
+        alert("User profile not loaded. Cannot send message.");
+        return;
+      }
+
       const messageText = document.getElementById("chatMessage").value.trim();
       const file = document.getElementById("imageUpload").files[0];
 

@@ -18,7 +18,7 @@ A web platform connecting Ghanaian farmers with buyers and providing expert farm
 - Firebase (Auth, Firestore, Hosting)
 
 ##  Screenshot
-
+! [Image](imag.png)
 
 
 ## 👨‍💻 Developed By

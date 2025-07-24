@@ -7,66 +7,18 @@
   <link rel="stylesheet" href="css/style.css" />
   <link rel="icon" href="/assets/icon.ico" />
   <style>
-body {
-  font-family: 'Segoe UI', sans-serif;
-  background: #f4f6f9;
-  margin: 0;
-  padding: 0;
-  color: #000;
-}
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #000;
+    }
     header {
       background: #007b5f;
       color: white;
       padding: 20px;
       text-align: center;
-    }
-    .container {
-      padding: 20px;
-    }
-    .welcome {
-      font-size: 1.5rem;
-      margin-bottom: 20px;
-      color: #000;
-    }
-    .stats {
-      display: flex;
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    
-    .card {
-      background: white;
-      border-radius: 10px;
-      padding: 15px 20px;
-      flex: 1;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      color: #000
-    }
-    
-    .crop-list {
-      margin-top: 20px;
-    }
-    .crop-item {
-      background: rgba(211, 203, 203, 0.849);
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-      color: #000;
-    }
-    button {
-      background: #007b5f;
-      color: rgb(230, 221, 221);
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #005f49;
     }
     .nav-bar {
       text-align: right;
@@ -76,9 +28,109 @@ body {
       color: #007b5f;
       margin-left: 15px;
       text-decoration: none;
+      font-weight: 500;
     }
     .nav-bar a:hover {
       text-decoration: underline;
+    }
+    .container {
+      padding: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .welcome {
+      font-size: 1.6rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+    }
+    .stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      flex: 1;
+      min-width: 200px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+    }
+    h2 {
+      margin-bottom: 15px;
+      color: #007b5f;
+    }
+    .crop-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .crop-item {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .crop-item img {
+      width: 100%;
+      border-radius: 8px;
+      max-height: 160px;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+    .crop-item h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      color: #333;
+    }
+    .crop-details {
+      margin: 10px 0;
+      font-size: 0.95rem;
+      color: #444;
+    }
+    .location-badge {
+      background: #e0f2f1;
+      color: #007b5f;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.8rem;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .order-box {
+      margin-top: 12px;
+    }
+    .order-box input {
+      width: 70px;
+      padding: 5px;
+      margin-right: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    button {
+      background: #007b5f;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #005f49;
+    }
+    .chat-btn {
+      background: #444;
+      margin-top: 8px;
+    }
+    .empty-message {
+      text-align: center;
+      font-style: italic;
+      color: gray;
     }
   </style>
 </head>
@@ -95,7 +147,7 @@ body {
   </div>
 
   <div class="container">
-    <div class="welcome">👋 Welcome back, <span id="usernameDashboard">Buyer</span></div>
+    <div class="welcome">👋 Hello, <span id="usernameDashboard">Buyer</span></div>
 
     <div class="stats">
       <div class="card">📦 Active Orders: <strong id="activeOrders">0</strong></div>
@@ -103,9 +155,9 @@ body {
       <div class="card">💬 Messages: <strong id="messagesCount">0</strong></div>
     </div>
 
-    <h2>🛒 Available Crops</h2>
+    <h2>🛒 All Available Crops</h2>
     <div class="crop-list" id="cropList">
-      <!-- Crop items will be injected via Firebase -->
+      <p class="empty-message" id="noCropsMsg">Loading crops...</p>
     </div>
   </div>
 
@@ -113,13 +165,11 @@ body {
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <!-- Firebase Config -->
   <script src="firebase/config.js"></script>
 
-  <!-- Dashboard JS -->
   <script>
     const cropList = document.getElementById('cropList');
+    const noCropsMsg = document.getElementById('noCropsMsg');
     const usernameEl = document.getElementById('usernameDashboard');
     const activeOrders = document.getElementById('activeOrders');
     const totalOrders = document.getElementById('totalOrders');
@@ -129,76 +179,88 @@ body {
       if (user) {
         firebase.firestore().collection("users").doc(user.uid).get()
           .then(doc => {
-            if (doc.exists) {
-              const role = doc.data().role;
-              if (role !== "farmer") {
-                // Stay on this page for buyers and others
-                usernameEl.textContent = user.displayName || "Buyer";
-                document.getElementById('username').textContent = user.displayName || "Buyer";
+            if (doc.exists && doc.data().role !== "farmer") {
+              usernameEl.textContent = user.displayName || "Buyer";
+              document.getElementById('username').textContent = user.displayName || "Buyer";
 
-                const db = firebase.firestore();
+              const db = firebase.firestore();
 
-                // Fetch Crop Listings
-                db.collection("crops").get().then(snapshot => {
+              db.collection("crops").get().then(snapshot => {
+                if (snapshot.empty) {
+                  noCropsMsg.textContent = "No crops available at the moment.";
+                } else {
+                  noCropsMsg.remove();
                   snapshot.forEach(doc => {
                     const data = doc.data();
                     const item = document.createElement('div');
                     item.className = 'crop-item';
+
+                    const imageUrl = data.imageUrl || 'assets/default-crop.jpg'; // fallback image
+
                     item.innerHTML = `
-                      <div>
-                        <strong>${data.name}</strong><br>
-                        Price: ₵${data.price} per kg<br>
-                        Location: ${data.location}
+                      <img src="${imageUrl}" alt="${data.name}" />
+                      <h3>${data.name}</h3>
+                      <div class="crop-details">
+                        Price: ₵${data.price} per kg<br/>
+                        <span class="location-badge">${data.location}</span>
                       </div>
-                      <button onclick="placeOrder('${doc.id}')">Order</button>
+                      <div class="order-box">
+                        <input type="number" min="1" placeholder="kg" id="qty-${doc.id}" />
+                        <button onclick="placeOrder('${doc.id}', '${data.name}', ${data.price}, '${data.farmerId}')">Order</button>
+                        <button class="chat-btn" onclick="startChat('${data.farmerId}')">💬 Chat</button>
+                      </div>
                     `;
                     cropList.appendChild(item);
                   });
-                });
+                }
+              });
 
-                // Fetch Orders & Messages Counts
-                db.collection("orders").where("buyerId", "==", user.uid).get().then(snapshot => {
-                  totalOrders.textContent = snapshot.size;
-                  const active = snapshot.docs.filter(doc => doc.data().status !== "Delivered").length;
-                  activeOrders.textContent = active;
-                });
+              db.collection("orders").where("buyerId", "==", user.uid).get().then(snapshot => {
+                totalOrders.textContent = snapshot.size;
+                activeOrders.textContent = snapshot.docs.filter(doc => doc.data().status !== "Delivered").length;
+              });
 
-                db.collection("messages").where("to", "==", user.uid).get().then(snapshot => {
-                  messagesCount.textContent = snapshot.size;
-                });
+              db.collection("messages").where("to", "==", user.uid).get().then(snapshot => {
+                messagesCount.textContent = snapshot.size;
+              });
 
-              } else {
-                // Redirect farmers to their dashboard
-                window.location.href = "farmer_dashboard.html";
-              }
+            } else {
+              window.location.href = "farmer_dashboard.html";
             }
           });
-      } 
+      }
     });
 
     function handleLogout() {
-      firebase.auth().signOut()
-        .then(() => window.location.href = "login.html")
+      firebase.auth().signOut().then(() => window.location.href = "login.html")
         .catch(err => alert("Logout failed: " + err.message));
     }
 
-    function placeOrder(cropId) {
-      const quantity = prompt("Enter quantity (kg):");
-      if (!quantity) return;
+    function startChat(farmerId) {
+      window.location.href = `chat.html?farmerId=${farmerId}`;
+    }
+
+    function placeOrder(cropId, cropName, pricePerKg, farmerId) {
+      const qtyInput = document.getElementById(`qty-${cropId}`);
+      const quantity = parseFloat(qtyInput.value);
+      if (!quantity || quantity <= 0) return alert("Please enter a valid quantity.");
       const user = firebase.auth().currentUser;
       if (!user) return;
 
       firebase.firestore().collection("orders").add({
         buyerId: user.uid,
         cropId,
+        cropName,
+        farmerId,
         quantity,
+        totalPrice: pricePerKg * quantity,
         status: "Pending",
         createdAt: new Date()
       }).then(() => {
-        alert("Order placed!");
+        alert("✅ Order placed successfully!");
         location.reload();
       }).catch(err => {
-        alert("Failed to place order: " + err.message);
+        alert("❌ Failed to place order: " + err.message);
       });
     }
   </script>

@@ -26,7 +26,6 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
   <script src="firebase/config.js"></script>
   <script src="js/app.js"></script>
   <script>
@@ -36,20 +35,9 @@
     const password = document.getElementById('loginPassword').value;
 
     firebase.auth().signInWithEmailAndPassword(email, password)
-      .then(async (userCredential) => {
-        const user = userCredential.user;
-        const db = firebase.firestore();
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        const userData = userDoc.data();
-
-        if (userData && userData.role === "buyer") {
-          window.location.href = "buyer_dashboard.html";
-        } else if (userData && userData.role === "farmer") {
-          window.location.href = "farmer_dashboard.html";
-        } else {
-          alert("Unknown user role. Please contact support.");
-          firebase.auth().signOut();
-        }
+      .then((userCredential) => {
+        // Login successful, redirect to dashboard
+        window.location.href = 'buyer_dashboard.html';
       })
       .catch((error) => {
         if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {

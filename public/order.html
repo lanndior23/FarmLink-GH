@@ -4,91 +4,73 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>FarmLink GH – Order Crops</title>
+  <link rel="stylesheet" href="css/order.css"/>
+  <link rel="icon" href="/assets/icon.ico" />
 
-  <!-- Google Font -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  
-  <!-- Main Style -->
-  <link rel="stylesheet" href="css/style.css" />
-
-  <!-- Firebase Scripts -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
-  <script src="firebase/config.js" defer></script>
-  <script src="js/order.js" defer></script>
+  <script src="firebase/config.js"></script>
 
-  <!-- Inline Styling (move to css/order.css if preferred) -->
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: #f4f7f9;
-      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7f9fb;
       padding: 20px;
       color: #333;
     }
 
     h2 {
       text-align: center;
-      color: #2d572c;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
 
     #cropList {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
     }
 
     .crop-card {
       background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 12px;
-      width: 220px;
+      border-radius: 10px;
       padding: 15px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
       display: flex;
       flex-direction: column;
-      align-items: center;
-      transition: transform 0.2s;
+      justify-content: space-between;
+      transition: transform 0.2s ease;
     }
 
     .crop-card:hover {
-      transform: translateY(-5px);
+      transform: scale(1.02);
     }
 
     .crop-name {
-      font-weight: 600;
+      font-weight: bold;
       font-size: 18px;
-      margin: 10px 0;
-      text-align: center;
+      margin-bottom: 10px;
     }
 
     .order-btn {
-      background: #2d572c;
+      background-color: #007b5e;
       color: white;
       border: none;
-      padding: 8px 16px;
-      font-size: 14px;
+      padding: 10px;
       border-radius: 6px;
       cursor: pointer;
-      transition: background 0.3s;
+      font-size: 14px;
+      transition: background 0.3s ease;
     }
 
     .order-btn:hover {
-      background: #1f3d1f;
-    }
-
-    @media (max-width: 600px) {
-      .crop-card {
-        width: 100%;
-      }
+      background-color: #005f47;
     }
   </style>
 </head>
 <body>
-  <h2>Order Your Preferred Crops</h2>
+  <h2>📦 Order Available Crops</h2>
   <div id="cropList"></div>
 
   <script>
@@ -103,20 +85,54 @@
     ];
 
     const cropList = document.getElementById('cropList');
+    let currentUser = null;
 
-    crops.forEach(crop => {
-      const card = document.createElement('div');
-      card.className = 'crop-card';
-      card.innerHTML = `
-        <div class="crop-name">${crop}</div>
-        <button class="order-btn" onclick="placeOrder('${crop}')">Order Now</button>
-      `;
-      cropList.appendChild(card);
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        alert("Please log in to place orders.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      currentUser = user;
+
+      crops.forEach(crop => {
+        const card = document.createElement('div');
+        card.className = 'crop-card';
+
+        const cropNameElem = document.createElement('div');
+        cropNameElem.className = 'crop-name';
+        cropNameElem.textContent = crop;
+
+        const orderBtn = document.createElement('button');
+        orderBtn.className = 'order-btn';
+        orderBtn.textContent = 'Place Order';
+        orderBtn.addEventListener('click', () => placeOrder(crop));
+
+        card.appendChild(cropNameElem);
+        card.appendChild(orderBtn);
+        cropList.appendChild(card);
+      });
     });
 
-    function placeOrder(cropName) {
-      alert("You selected: " + cropName + ". Proceed to complete order flow here.");
-      // Integrate Firestore order submission here later
+    async function placeOrder(cropName) {
+      if (!currentUser) return;
+
+      try {
+        const order = {
+          buyerName: currentUser.displayName || "Unknown Buyer",
+          buyerId: currentUser.uid,
+          crop: cropName,
+          status: "Pending",
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        await firebase.firestore().collection("orders").add(order);
+        alert(`✅ Order placed for ${cropName}`);
+      } catch (err) {
+        console.error("Order error:", err);
+        alert("❌ Failed to place order. Try again.");
+      }
     }
   </script>
 </body>

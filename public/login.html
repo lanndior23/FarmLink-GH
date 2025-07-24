@@ -42,13 +42,19 @@
         const userDoc = await db.collection("users").doc(user.uid).get();
         const userData = userDoc.data();
 
-        if (userData && userData.role === "buyer") {
+        if (!userDoc.exists || !userData || !userData.role) {
+          alert("Your account is missing a role or is not set up correctly. Please contact support.");
+          await firebase.auth().signOut();
+          return;
+        }
+
+        if (userData.role === "buyer") {
           window.location.href = "buyer_dashboard.html";
-        } else if (userData && userData.role === "farmer") {
+        } else if (userData.role === "farmer") {
           window.location.href = "farmer_dashboard.html";
         } else {
           alert("Unknown user role. Please contact support.");
-          firebase.auth().signOut();
+          await firebase.auth().signOut();
         }
       })
       .catch((error) => {

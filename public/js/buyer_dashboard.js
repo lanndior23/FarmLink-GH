@@ -1,4 +1,3 @@
-
 // Initialize Firebase (make sure firebase.initializeApp(...) is already done in firebase/config.js)
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -19,8 +18,7 @@ auth.onAuthStateChanged(async user => {
     }
 
     // Display buyer name
-    const welcomeEl = document.getElementById("welcomeBuyer");
-    if (welcomeEl) welcomeEl.textContent = `Welcome, ${userData.fullName}`;
+    document.getElementById("welcomeBuyer").textContent = `Welcome, ${userData.fullName}`;
 
     // Load Crops
     loadCrops();
@@ -34,7 +32,7 @@ auth.onAuthStateChanged(async user => {
       .where("to", "==", userId)
       .orderBy("timestamp", "desc")
       .onSnapshot(snapshot => {
-        if (messagesCount) messagesCount.textContent = snapshot.size;
+        messagesCount.textContent = snapshot.size;
 
         if (!snapshot.empty) {
           const latestMsg = snapshot.docs[0];
@@ -42,11 +40,11 @@ auth.onAuthStateChanged(async user => {
           const lastSeenId = localStorage.getItem("lastSeenMessageId");
 
           if (latestMsgId !== lastSeenId) {
-            if (newMsgBadge) newMsgBadge.style.display = "inline-block";
-            if (chatDot) chatDot.style.display = "inline";
+            newMsgBadge.style.display = "inline-block";
+            chatDot.style.display = "inline";
           } else {
-            if (newMsgBadge) newMsgBadge.style.display = "none";
-            if (chatDot) chatDot.style.display = "none";
+            newMsgBadge.style.display = "none";
+            chatDot.style.display = "none";
           }
         }
       });

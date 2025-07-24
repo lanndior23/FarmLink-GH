@@ -3,163 +3,175 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chat – FarmLink GH</title>
-  <link rel="stylesheet" href="css/dashboard.css" />
-  <link rel="icon" href="/assets/icon.ico" />
+  <title>FarmLink GH – Chat</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <link rel="icon" href="assets/icon.ico"/>
   <style>
-    .chat-box {
+    body {
+      background: #f0f8ff;
+      font-family: Arial, sans-serif;
+    }
+
+    .chat-container {
       max-width: 700px;
       margin: 40px auto;
       background: #fff;
+      border-radius: 10px;
       padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-    .message {
-      margin-bottom: 16px;
-      padding: 10px;
-      border-radius: 8px;
-      background: #f2f2f2;
-    }
-    .message img {
-      max-width: 100%;
-      border-radius: 6px;
-      margin-top: 8px;
-    }
-    .message .sender {
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-    .chat-input {
+
+    .chat-header {
       display: flex;
-      gap: 8px;
-      margin-top: 16px;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
     }
-    .chat-input input[type="text"] {
+
+    .messages {
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 8px 12px;
+      border-radius: 6px;
+      max-width: 75%;
+    }
+
+    .sent {
+      background: #daf1ff;
+      align-self: flex-end;
+      margin-left: auto;
+    }
+
+    .received {
+      background: #eee;
+      align-self: flex-start;
+    }
+
+    .chat-form {
+      margin-top: 15px;
+      display: flex;
+    }
+
+    .chat-form input {
       flex: 1;
       padding: 10px;
-      border-radius: 6px;
+      border-radius: 6px 0 0 6px;
       border: 1px solid #ccc;
     }
-    .chat-input button, .chat-input label {
-      padding: 10px;
-      background: #007b5e;
-      color: white;
+
+    .chat-form button {
+      background: #28a745;
+      color: #fff;
+      padding: 10px 20px;
       border: none;
-      border-radius: 6px;
+      border-radius: 0 6px 6px 0;
       cursor: pointer;
     }
-    .chat-input input[type="file"] {
-      display: none;
+
+    .label {
+      font-weight: bold;
+      color: #0077cc;
     }
   </style>
 </head>
 <body>
-  <div class="chat-box">
-    <h2>💬 Farmer Chat Room</h2>
-    <div id="userNameLabel" style="margin-bottom:10px;font-weight:bold;"></div>
-    <div id="chatMessages"></div>
-
-    <div class="chat-input">
-      <input type="text" id="chatMessage" placeholder="Type your message..." />
-      <label for="imageUpload">📷</label>
-      <input type="file" id="imageUpload" accept="image/*" />
-      <button onclick="sendMessage()">Send</button>
+  <div class="chat-container">
+    <div class="chat-header">
+      <h2>FarmLink Chat</h2>
+      <span id="receiverName" class="label"></span>
     </div>
+
+    <div class="messages" id="chatBox"></div>
+
+    <form class="chat-form" id="chatForm">
+      <input type="text" id="chatInput" placeholder="Type your message..." required />
+      <button type="submit">Send</button>
+    </form>
   </div>
 
-  <!-- Firebase SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
-
-  <!-- Firebase Config -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script src="firebase/config.js"></script>
   <script>
+    const auth = firebase.auth();
     const db = firebase.firestore();
-    const storage = firebase.storage();
-    let currentUser = null;
-    let userProfile = {};
 
-    firebase.auth().onAuthStateChanged(async (user) => {
-      if (user) {
-        const userRef = await db.collection("users").doc(user.uid).get();
-        const userData = userRef.data();
+    const chatBox = document.getElementById("chatBox");
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const receiverName = document.getElementById("receiverName");
 
-        if (!userData) {
-          alert("No user data found. Please register again.");
-          document.querySelector(".chat-input button").disabled = true;
-          document.getElementById("chatMessage").disabled = true;
-          return;
-        }
+    const urlParams = new URLSearchParams(window.location.search);
+    const to = urlParams.get("to"); // recipient UID
 
-        const { name, role } = userData;
-        userProfile = userData;
-        document.getElementById("userNameLabel").textContent = `${role === 'farmer' ? '👩🏾‍🌾 Farmer' : '🧑🏿 Buyer'} ${name}`;
+    if (!to) {
+      alert("No chat user specified.");
+      window.location.href = "buyer_dashboard.html";
+    }
 
-        listenForMessages();
-      } else {
-        window.location.href = "login.html";
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        return window.location.href = "login.html";
       }
-    });
 
-    const chatBox = document.getElementById("chatMessages");
+      const from = user.uid;
 
-    function listenForMessages() {
-      db.collection("chat")
-        .orderBy("timestamp", "asc")
+      // Show receiver label
+      const userDoc = await db.collection("users").doc(to).get();
+      const userData = userDoc.data();
+      receiverName.textContent = `Chatting with: ${userData.fullName || 'User'}`;
+
+      // Fetch & display messages
+      db.collection("messages")
+        .where("participants", "array-contains", from)
+        .orderBy("timestamp")
         .onSnapshot(snapshot => {
           chatBox.innerHTML = "";
           snapshot.forEach(doc => {
             const msg = doc.data();
-            const div = document.createElement("div");
-            div.className = "message";
-
-            const senderRole = msg.role === "farmer" ? "👩🏾‍🌾 Farmer" : "🧑🏿 Buyer";
-            div.innerHTML = `
-              <div class="sender">${senderRole} ${msg.name}</div>
-              <div>${msg.text || ""}</div>
-              ${msg.imageUrl ? `<img src="${msg.imageUrl}" alt="Crop Image" />` : ""}
-              <small>${new Date(msg.timestamp?.toDate()).toLocaleString()}</small>
-            `;
-            chatBox.appendChild(div);
-            chatBox.scrollTop = chatBox.scrollHeight;
+            if (
+              (msg.from === from && msg.to === to) ||
+              (msg.from === to && msg.to === from)
+            ) {
+              const msgDiv = document.createElement("div");
+              msgDiv.classList.add("message");
+              msgDiv.classList.add(msg.from === from ? "sent" : "received");
+              msgDiv.textContent = msg.text;
+              chatBox.appendChild(msgDiv);
+            }
           });
+
+          chatBox.scrollTop = chatBox.scrollHeight;
         });
-    }
 
-    async function sendMessage() {
-      // Restrict sending if userProfile is missing
-      if (!userProfile || !userProfile.name || !userProfile.role) {
-        alert("User profile not loaded. Cannot send message.");
-        return;
-      }
+      // Send message
+      chatForm.addEventListener("submit", async e => {
+        e.preventDefault();
 
-      const messageText = document.getElementById("chatMessage").value.trim();
-      const file = document.getElementById("imageUpload").files[0];
+        const message = chatInput.value.trim();
+        if (message === "") return;
 
-      let imageUrl = null;
-      if (file) {
-        const storageRef = storage.ref(`chat_images/${Date.now()}_${file.name}`);
-        await storageRef.put(file);
-        imageUrl = await storageRef.getDownloadURL();
-      }
+        await db.collection("messages").add({
+          from: from,
+          to: to,
+          text: message,
+          participants: [from, to],
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-      if (!messageText && !imageUrl) return;
-
-      await db.collection("chat").add({
-        uid: currentUser.uid,
-        name: userProfile.name,
-        role: userProfile.role,
-        text: messageText,
-        imageUrl: imageUrl || null,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        localStorage.setItem("lastSeenMessageId", Date.now().toString());
+        chatInput.value = "";
       });
-
-      document.getElementById("chatMessage").value = "";
-      document.getElementById("imageUpload").value = "";
-    }
+    });
   </script>
 </body>
 </html>

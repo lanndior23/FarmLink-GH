@@ -11,6 +11,7 @@
       background: #f0f8ff;
       font-family: Arial, sans-serif;
     }
+
     .chat-container {
       max-width: 700px;
       margin: 40px auto;
@@ -19,12 +20,14 @@
       padding: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+
     .chat-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 15px;
     }
+
     .messages {
       max-height: 400px;
       overflow-y: auto;
@@ -32,35 +35,38 @@
       border-radius: 8px;
       padding: 10px;
       background: #f9f9f9;
-      display: flex;
-      flex-direction: column;
     }
+
     .message {
       margin: 10px 0;
       padding: 8px 12px;
       border-radius: 6px;
       max-width: 75%;
-      word-wrap: break-word;
     }
+
     .sent {
       background: #daf1ff;
       align-self: flex-end;
       margin-left: auto;
     }
+
     .received {
       background: #eee;
       align-self: flex-start;
     }
+
     .chat-form {
       margin-top: 15px;
       display: flex;
     }
+
     .chat-form input {
       flex: 1;
       padding: 10px;
       border-radius: 6px 0 0 6px;
       border: 1px solid #ccc;
     }
+
     .chat-form button {
       background: #28a745;
       color: #fff;
@@ -69,99 +75,117 @@
       border-radius: 0 6px 6px 0;
       cursor: pointer;
     }
+
     .label {
       font-weight: bold;
       color: #0077cc;
     }
+
+    .error {
+      color: red;
+      text-align: center;
+      font-size: 1.2em;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <div class="chat-container">
+  <div class="chat-container" id="chatContainer" style="display: none;">
     <div class="chat-header">
       <h2>FarmLink Chat</h2>
       <span id="receiverName" class="label"></span>
     </div>
+
     <div class="messages" id="chatBox"></div>
+
     <form class="chat-form" id="chatForm">
       <input type="text" id="chatInput" placeholder="Type your message..." required />
       <button type="submit">Send</button>
     </form>
   </div>
 
-  <!-- Firebase SDKs -->
+  <div id="errorMsg" class="error" style="display: none;"></div>
+
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <script src="firebase/config.js"></script>
-
   <script>
-    // Initialize Firebase services
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // DOM elements
     const chatBox = document.getElementById("chatBox");
     const chatForm = document.getElementById("chatForm");
     const chatInput = document.getElementById("chatInput");
     const receiverName = document.getElementById("receiverName");
+    const chatContainer = document.getElementById("chatContainer");
+    const errorMsg = document.getElementById("errorMsg");
 
-    // Get 'to' parameter from URL
+    // Get recipient ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const to = urlParams.get("to");
 
-    // Redirect if no chat user specified
     if (!to) {
-      alert("❌ No chat user specified.");
-      window.location.href = "buyer_dashboard.html";
+      errorMsg.textContent = "⚠️ No chat recipient specified in the URL.";
+      errorMsg.style.display = "block";
+      return;
     }
 
-    // Listen for auth state
     auth.onAuthStateChanged(async user => {
-      if (!user) return window.location.href = "login.html";
-      const from = user.uid;
-
-      // Show receiver's name
-      try {
-        const userDoc = await db.collection("users").doc(to).get();
-        const userData = userDoc.data();
-        receiverName.textContent = `Chatting with: ${userData?.fullName || 'User'}`;
-      } catch (err) {
-        receiverName.textContent = "Chatting with user";
+      if (!user) {
+        return window.location.href = "login.html";
       }
 
-      // Listen for messages between 'from' and 'to'
-      db.collection("messages")
-        .where("participants", "array-contains", from)
-        .orderBy("timestamp")
-        .onSnapshot(snapshot => {
-          chatBox.innerHTML = "";
-          snapshot.forEach(doc => {
-            const msg = doc.data();
-            const isRelevant = (msg.from === from && msg.to === to) || (msg.from === to && msg.to === from);
-            if (isRelevant) {
-              const msgDiv = document.createElement("div");
-              msgDiv.classList.add("message", msg.from === from ? "sent" : "received");
-              msgDiv.textContent = msg.text;
-              chatBox.appendChild(msgDiv);
-            }
+      const from = user.uid;
+      chatContainer.style.display = "block";
+
+      try {
+        // Get recipient's name
+        const userDoc = await db.collection("users").doc(to).get();
+        const userData = userDoc.data();
+        receiverName.textContent = `Chatting with: ${userData?.fullName || "User"}`;
+
+        // Load messages
+        db.collection("messages")
+          .where("participants", "array-contains", from)
+          .orderBy("timestamp")
+          .onSnapshot(snapshot => {
+            chatBox.innerHTML = "";
+            snapshot.forEach(doc => {
+              const msg = doc.data();
+              if ((msg.from === from && msg.to === to) || (msg.from === to && msg.to === from)) {
+                const msgDiv = document.createElement("div");
+                msgDiv.classList.add("message", msg.from === from ? "sent" : "received");
+                msgDiv.textContent = msg.text;
+                chatBox.appendChild(msgDiv);
+              }
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
           });
-          chatBox.scrollTop = chatBox.scrollHeight;
-        });
 
-      // Send message handler
-      chatForm.addEventListener("submit", async e => {
-        e.preventDefault();
-        const text = chatInput.value.trim();
-        if (!text) return;
+        // Send message
+        chatForm.addEventListener("submit", async e => {
+          e.preventDefault();
+          const message = chatInput.value.trim();
+          if (message === "") return;
 
-        await db.collection("messages").add({
-          from,
-          to,
-          text,
-          participants: [from, to],
-          timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-            chatInput.value = "";
+          await db.collection("messages").add({
+            from,
+            to,
+            text: message,
+            participants: [from, to],
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
           });
+
+          chatInput.value = "";
         });
+
+      } catch (err) {
+        errorMsg.textContent = "❌ Failed to load chat. " + err.message;
+        errorMsg.style.display = "block";
+        chatContainer.style.display = "none";
+      }
+    });
+  </script>
+</body>
+</html>

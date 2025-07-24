@@ -99,7 +99,39 @@ function openChatWithFarmer(farmerId) {
   };
 }
 
-// Init on page load
+
+// Real-time message badge logic
 window.addEventListener("DOMContentLoaded", () => {
   loadAvailableCrops();
+
+  firebase.auth().onAuthStateChanged(user => {
+    if (user) {
+      const messagesCount = document.getElementById("messagesCount");
+      const newMsgBadge = document.getElementById("newMsgBadge");
+      const chatDot = document.getElementById("chatDot");
+
+      db.collection("messages")
+        .where("to", "==", user.uid)
+        .orderBy("timestamp", "desc")
+        .onSnapshot(snapshot => {
+          if (messagesCount) messagesCount.textContent = snapshot.size;
+
+          if (!snapshot.empty) {
+            const latestMsg = snapshot.docs[0];
+            const latestMsgId = latestMsg.id;
+            const lastSeenId = localStorage.getItem("lastSeenMessageId");
+
+            if (latestMsgId !== lastSeenId) {
+              if (newMsgBadge) newMsgBadge.style.display = "inline-block";
+              if (chatDot) chatDot.style.display = "inline";
+            } else {
+              if (newMsgBadge) newMsgBadge.style.display = "none";
+              if (chatDot) chatDot.style.display = "none";
+            }
+          }
+        });
+    } else {
+      window.location.href = "login.html";
+    }
+  });
 });

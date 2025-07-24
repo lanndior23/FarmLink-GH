@@ -49,6 +49,23 @@ auth.onAuthStateChanged(async user => {
         }
       });
 
+    // Get a farmer (opposite role) and update chat link
+    db.collection("users")
+      .where("role", "==", "farmer")
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          const farmer = snapshot.docs[0];
+          const chatLink = document.getElementById("chatLink");
+          if (chatLink) {
+            chatLink.href = `chat.html?to=${farmer.id}`;
+          }
+        } else {
+          console.log("No farmer found.");
+        }
+      });
+
   } else {
     // If not logged in
     window.location.href = "login.html";

@@ -7,19 +7,26 @@
 
 .crop-card {
   background: #f9f9f9;
-  padding: 12px;
-  border-radius: 10px;
+  padding: 16px;
+  border-radius: 12px;
   text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   transition: 0.3s;
+  aspect-ratio: 1 / 1; /* Makes the card square */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .crop-card:hover {
   background: #e0ffe0;
-  transform: scale(1.03);
+  transform: scale(1.05);
 }
 
 .crop-name {
   font-weight: bold;
+  font-size: 1.1em;
   color: #2e7d32;
+  margin-bottom: 8px;
 }

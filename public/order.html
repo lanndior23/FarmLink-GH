@@ -40,7 +40,24 @@
   <div id="cropList"></div>
 
   <script>
-    // This part displays crops and handles ordering
+    const crops = [
+      "Maize", "Rice", "Millet", "Sorghum",
+      "Cassava", "Yam", "Cocoyam", "Sweet Potato",
+      "Plantain", "Banana", "Mango", "Pineapple", "Papaya", "Orange", "Watermelon", "Avocado", "Coconut",
+      "Tomatoes", "Garden Eggs", "Okra", "Pepper", "Cabbage", "Carrots", "Onion", "Lettuce", "Cucumber",
+      "Groundnut", "Cowpea", "Soybean",
+      "Cocoa", "Oil Palm", "Coffee", "Cotton", "Rubber", "Shea Nuts",
+      "Ginger", "Garlic", "Turmeric", "Basil", "Mint"
+    ];
+
+    const staticCropList = document.getElementById('cropList');
+
+    crops.forEach(crop => {
+      const card = document.createElement('div');
+      card.className = 'crop-card';
+      card.innerHTML = `<span class="crop-name">${crop}</span>`;
+      staticCropList.appendChild(card);
+    });
   </script>
 </body>
 </html>

@@ -41,7 +41,23 @@
     .welcome {
       font-size: 1.6rem;
       font-weight: 500;
+      margin-bottom: 10px;
+    }
+    .order-page-btn {
       margin-bottom: 20px;
+    }
+    .order-page-btn a button {
+      background-color: #ff9800;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 8px;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    .order-page-btn a button:hover {
+      background-color: #e68900;
     }
     .stats {
       display: flex;
@@ -74,7 +90,6 @@
       padding: 16px;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
     }
     .crop-item img {
       width: 100%;
@@ -136,12 +151,10 @@
 </head>
 <body>
 
-
   <header>
     <h1>FarmLink GH – Buyer Dashboard</h1>
     <h2 id="welcomeBuyer"></h2>
   </header>
-
 
   <div class="nav-bar">
     <span id="username">Welcome, Buyer</span>
@@ -153,6 +166,11 @@
   <div class="container">
     <div class="welcome">👋 Hello, <span id="usernameDashboard">Buyer</span></div>
 
+    <div class="order-page-btn">
+      <a href="order.html">
+        <button>🛒 Go to Order Page</button>
+      </a>
+    </div>
 
     <div class="stats">
       <div class="card">📦 Active Orders: <strong id="activeOrders">0</strong></div>
@@ -161,9 +179,14 @@
         💬 Messages: <span id="messagesCount">0</span>
         <span id="newMsgBadge" style="display: none; background:red; color:white; padding:2px 6px; border-radius:8px; font-size:0.8rem; margin-left:6px;">NEW</span>
       </div>
- 
+    </div>
 
-<!-- Firebase SDKs -->
+    <h2>🛒 All Available Crops</h2>
+    <div id="cropList" class="crop-list"></div>
+    <div id="noCropsMsg" class="empty-message"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -197,7 +220,7 @@
                     const item = document.createElement('div');
                     item.className = 'crop-item';
 
-                    const imageUrl = data.imageUrl || 'assets/default-crop.jpg'; // fallback image
+                    const imageUrl = data.imageUrl || 'assets/default-crop.jpg';
 
                     item.innerHTML = `
                       <img src="${imageUrl}" alt="${data.name}" />
@@ -224,17 +247,12 @@
 
               db.collection("messages").where("to", "==", user.uid).get().then(snapshot => {
                 messagesCount.textContent = snapshot.size;
-                // Show NEW badge if there are unseen messages
                 const lastSeenId = localStorage.getItem("lastSeenMessageId");
                 let hasNew = false;
                 if (snapshot.size > 0 && lastSeenId) {
-                  // If any message is newer than lastSeenId
                   for (let i = 0; i < snapshot.docs.length; i++) {
                     if (snapshot.docs[i].id !== lastSeenId) {
                       hasNew = true;
-                      break;
-                    } else {
-                      hasNew = false;
                       break;
                     }
                   }

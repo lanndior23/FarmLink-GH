@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Farm Orders – FarmLink GH</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="/assets/icon.ico" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    header {
+      background: #007b5f;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    h2 {
+      color: #007b5f;
+      margin-bottom: 24px;
+    }
+    .orders-list {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .orders-list th, .orders-list td {
+      border: 1px solid #e0e0e0;
+      padding: 10px 8px;
+      text-align: left;
+    }
+    .orders-list th {
+      background: #e0f2f1;
+      color: #007b5f;
+    }
+    .orders-list tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    .empty-message {
+      text-align: center;
+      font-style: italic;
+      color: #888;
+      margin-top: 40px;
+    }
+    /* Responsive styles */
+    @media (max-width: 900px) {
+      .container {
+        max-width: 100%;
+        margin: 10px 0;
+        border-radius: 0;
+      }
+    }
+    @media (max-width: 700px) {
+      header {
+        padding: 12px 4px;
+        font-size: 1.1em;
+      }
+      .container {
+        padding: 6px 2vw;
+        margin: 10px 0;
+        border-radius: 0;
+      }
+      h2 {
+        font-size: 1.1em;
+        margin-bottom: 16px;
+      }
+      .orders-list, .orders-list thead, .orders-list tbody, .orders-list th, .orders-list td, .orders-list tr {
+        display: block;
+        width: 100%;
+      }
+      .orders-list {
+        margin-top: 10px;
+      }
+      .orders-list thead {
+        display: none;
+      }
+      .orders-list tr {
+        margin-bottom: 16px;
+        border-bottom: 2px solid #e0e0e0;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        padding: 6px 0;
+      }
+      .orders-list td {
+        /* Fix alignment: use flex for label and value */
+        display: flex;
+        align-items: center;
+        padding: 10px 8px;
+        border: none;
+        font-size: 1em;
+        /* Remove right alignment */
+        text-align: left;
+      }
+      .orders-list td:before {
+        content: attr(data-label);
+        font-weight: bold;
+        color: #007b5f;
+        font-size: 0.98em;
+        /* Remove float, add margin for spacing */
+        margin-right: 10px;
+        min-width: 110px;
+        flex-shrink: 0;
+        /* Prevent wrapping */
+        white-space: nowrap;
+        display: inline-block;
+      }
+      select {
+        width: 100%;
+        font-size: 1em;
+        padding: 6px 4px;
+        border-radius: 6px;
+      }
+    }
+    @media (max-width: 480px) {
+      header {
+        font-size: 1em;
+        padding: 8px 2px;
+      }
+      .container {
+        padding: 2px 1vw;
+      }
+      h2 {
+        font-size: 1em;
+      }
+      .orders-list td {
+        font-size: 0.97em;
+        padding: 8px 4px;
+      }
+      select {
+        font-size: 0.97em;
+      }
+    }
+    /* Fallback: horizontal scroll for table if JS fails */
+    @media (max-width: 700px) {
+      .orders-list {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Farm Orders – FarmLink GH</h1>
+  </header>
+  <div class="container">
+    <h2>Orders for Your Crops</h2>
+    <div id="noOrdersMsg" class="empty-message"></div>
+    <table class="orders-list" id="ordersTable" style="display:none;">
+      <thead>
+        <tr>
+          <th>Crop</th>
+          <th>Buyer</th>
+          <th>Quantity (kg)</th>
+          <th>Total Price (₵)</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="ordersBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase/config.js"></script>
+  <script>
+    firebase.auth().onAuthStateChanged(async user => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+      const db = firebase.firestore();
+      const ordersBody = document.getElementById("ordersBody");
+      const ordersTable = document.getElementById("ordersTable");
+      const noOrdersMsg = document.getElementById("noOrdersMsg");
+
+      // Helper to render orders
+      async function renderOrders(orderDocs) {
+        ordersBody.innerHTML = "";
+        if (orderDocs.length === 0) {
+          ordersTable.style.display = "none";
+          noOrdersMsg.textContent = "No orders for your crops yet.";
+          return;
+        }
+        ordersTable.style.display = "";
+        noOrdersMsg.textContent = "";
+        const buyerCache = {};
+        for (const doc of orderDocs) {
+          const order = doc.data();
+          let buyerName = "Unknown";
+          if (order.buyerId) {
+            if (buyerCache[order.buyerId]) {
+              buyerName = buyerCache[order.buyerId];
+            } else {
+              try {
+                const buyerDoc = await db.collection("users").doc(order.buyerId).get();
+                buyerName = buyerDoc.exists ? (buyerDoc.data().displayName || "Buyer") : "Buyer";
+                buyerCache[order.buyerId] = buyerName;
+              } catch {
+                buyerName = "Buyer";
+              }
+            }
+          }
+          // Status dropdown
+          const statusOptions = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+          const statusSelect = `
+            <select onchange="updateOrderStatus('${doc.id}', this.value)">
+              ${statusOptions.map(opt => `<option value="${opt}"${order.status === opt ? " selected" : ""}>${opt}</option>`).join("")}
+            </select>
+          `;
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td data-label="Crop">${order.cropName || ""}</td>
+            <td data-label="Buyer">${buyerName}</td>
+            <td data-label="Quantity (kg)">${order.quantity}</td>
+            <td data-label="Total Price (₵)">${order.totalPrice}</td>
+            <td data-label="Status">${statusSelect}</td>
+          `;
+          ordersBody.appendChild(row);
+        }
+      }
+
+      // Add updateOrderStatus to window so it's accessible from inline HTML
+      window.updateOrderStatus = function(orderId, newStatus) {
+        const db = firebase.firestore();
+        db.collection("orders").doc(orderId).update({ status: newStatus })
+          .then(() => {
+            // Optionally show a toast or message
+          })
+          .catch(err => {
+            alert("Failed to update status: " + err.message);
+          });
+      }
+
+      // Listen for orders with farmerId == user.uid
+      db.collection("orders")
+        .where("farmerId", "==", user.uid)
+        .onSnapshot(async snapshot1 => {
+          // Also listen for orders with userId == user.uid (legacy support)
+          db.collection("orders")
+            .where("userId", "==", user.uid)
+            .onSnapshot(async snapshot2 => {
+              // Merge both sets, avoid duplicates
+              const docsMap = {};
+              snapshot1.docs.forEach(doc => docsMap[doc.id] = doc);
+              snapshot2.docs.forEach(doc => docsMap[doc.id] = doc);
+              // Sort by createdAt descending
+              const allDocs = Object.values(docsMap).sort((a, b) => {
+                const aTime = a.data().createdAt ? a.data().createdAt.toDate ? a.data().createdAt.toDate().getTime() : a.data().createdAt.seconds * 1000 : 0;
+                const bTime = b.data().createdAt ? b.data().createdAt.toDate ? b.data().createdAt.toDate().getTime() : b.data().createdAt.seconds * 1000 : 0;
+                return bTime - aTime;
+              });
+              await renderOrders(allDocs);
+            });
+        });
+    });
+  </script>
+</body>
+</html>

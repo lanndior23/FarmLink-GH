@@ -14,6 +14,7 @@
       margin-bottom: 15px;
       border-radius: 8px;
       box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      word-break: break-word;
     }
 
     .progress-bar {
@@ -35,6 +36,35 @@
       font-size: 0.9em;
       margin-top: 5px;
       color: #555;
+    }
+
+    .order-list {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 600px) {
+      .dashboard-header {
+        padding: 10px;
+        font-size: 1.1em;
+      }
+
+      .order-item {
+        padding: 10px;
+        font-size: 0.98em;
+      }
+
+      .order-list {
+        padding: 0 4px;
+      }
+
+      .dashboard-container, .order-history {
+        padding: 0 2px;
+      }
+
+      h1, h2 {
+        font-size: 1.2em;
+      }
     }
   </style>
 </head>
@@ -72,10 +102,17 @@
     const db = firebase.firestore();
 
     const statusStages = {
+      "Pending": { label: "Order Placed", progress: 25 },
+      "Processing": { label: "Confirmed by Farmer", progress: 50 },
+      "Shipped": { label: "In Transit", progress: 75 },
+      "Delivered": { label: "Delivered", progress: 100 },
+      "Cancelled": { label: "Cancelled", progress: 0 },
+      // legacy/alternate statuses
       "placed": { label: "Order Placed", progress: 25 },
       "confirmed": { label: "Confirmed by Farmer", progress: 50 },
       "in_transit": { label: "In Transit", progress: 75 },
-      "delivered": { label: "Delivered", progress: 100 }
+      "delivered": { label: "Delivered", progress: 100 },
+      "cancelled": { label: "Cancelled", progress: 0 }
     };
 
     firebase.auth().onAuthStateChanged(user => {
@@ -83,7 +120,6 @@
         const orderList = document.getElementById("orderHistoryList");
         db.collection("orders")
           .where("buyerId", "==", user.uid)
-          .orderBy("timestamp", "desc")
           .onSnapshot(snapshot => {
             orderList.innerHTML = "";
             if (snapshot.empty) {
@@ -91,16 +127,38 @@
               return;
             }
 
-            snapshot.forEach(doc => {
+            // Sort orders by createdAt descending (newest first)
+            const docs = snapshot.docs.slice().sort((a, b) => {
+              const aTime = a.data().createdAt
+                ? (a.data().createdAt.toDate ? a.data().createdAt.toDate().getTime() : a.data().createdAt.seconds * 1000)
+                : 0;
+              const bTime = b.data().createdAt
+                ? (b.data().createdAt.toDate ? b.data().createdAt.toDate().getTime() : b.data().createdAt.seconds * 1000)
+                : 0;
+              return bTime - aTime;
+            });
+
+            docs.forEach(doc => {
               const data = doc.data();
-              const status = data.status || "placed";
-              const stage = statusStages[status] || statusStages["placed"];
+              // Normalize status for lookup
+              const status = data.status || "Pending";
+              const stage = statusStages[status] || statusStages[status.toLowerCase()] || statusStages["Pending"];
               const orderItem = document.createElement("div");
               orderItem.className = "order-item";
 
+              // Use createdAt instead of timestamp
+              let dateStr = "";
+              if (data.createdAt && data.createdAt.toDate) {
+                dateStr = new Date(data.createdAt.toDate()).toLocaleString();
+              } else if (data.createdAt && data.createdAt.seconds) {
+                dateStr = new Date(data.createdAt.seconds * 1000).toLocaleString();
+              } else {
+                dateStr = "Unknown";
+              }
+
               orderItem.innerHTML = `
                 <strong>${data.cropName}</strong><br>
-                <small>Ordered on: ${new Date(data.timestamp?.toDate()).toLocaleString()}</small>
+                <small>Ordered on: ${dateStr}</small>
                 <div class="progress-bar">
                   <div class="progress-bar-fill" style="width: ${stage.progress}%;"></div>
                 </div>

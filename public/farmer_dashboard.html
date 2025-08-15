@@ -8,6 +8,74 @@
   <link rel="icon" href="/assets/icon.ico">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <style>
+    @media (max-width: 700px) {
+      .container, .market, .crop-grid {
+        padding: 6px;
+        margin: 10px 0;
+      }
+      .market-header h3 {
+        font-size: 1.1rem;
+      }
+      .market-form, .form-group, .crop-grid {
+        font-size: 0.98em;
+      }
+      h1, h3 {
+        font-size: 1.2em;
+      }
+      .upload-btn {
+        font-size: 1em;
+        padding: 10px;
+      }
+    }
+    /* Add responsive nav styles */
+    .dashboard-header nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 10px;
+      margin-bottom: 0;
+      padding: 0;
+    }
+    .dashboard-header nav a {
+      background: #e0f2f1;
+      color: #007b5f;
+      text-decoration: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 1em;
+      transition: background 0.2s;
+      margin: 2px 0;
+      display: inline-block;
+    }
+    .dashboard-header nav a:hover {
+      background: #b2dfdb;
+    }
+    @media (max-width: 700px) {
+      .dashboard-header nav {
+        gap: 8px;
+      }
+      .dashboard-header nav a {
+        font-size: 0.98em;
+        padding: 8px 10px;
+      }
+    }
+    @media (max-width: 480px) {
+      .dashboard-header nav {
+        flex-direction: column;
+        gap: 6px;
+      }
+      .dashboard-header nav a {
+        width: 100%;
+        text-align: center;
+        font-size: 0.97em;
+        padding: 10px 0;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -16,83 +84,64 @@
   <header class="dashboard-header">
     <h1>🌾 FarmLink GH Dashboard</h1>
     <nav>
-      <a href="#profile">👤 Profile</a>
+      <a href="crops.html">🌱 Crops</a>
+      <a href="orders.html">📦 Orders</a>
       <a href="#" onclick="handleLogout()">🚪 Logout</a>
-      <a href="chat.html?to=BUYER_UID">Chat with Buyer</a>
-</nav>
+      <a id="chatWithBuyerLink" href="#">Chat with Buyer</a>
+    </nav>
   </header>
 
-  <main class="dashboard-container">
-    <!-- Overview Section -->
-    <section class="overview">
-      <h2>Welcome, <span id="username">Farmer</span></h2>
-      <div class="stats">
-        <div class="stat-box">✅ Active Listings: <strong>12</strong></div>
-        <div class="stat-box">📦 Sold Products: <strong>8</strong></div>
-        <div class="stat-box">💬 New Messages: <strong>3</strong></div>
-        <div class="stat-box">🌿 Tips Posted: <strong>5</strong></div>
-      </div>
-    </section>
 
-    <!-- Market Listings -->
-    <section class="market">
-      <h3>🛒 Market Listings</h3>
-      <form id="cropForm" style="margin-bottom: 18px;">
-        <input type="text" id="cropName" placeholder="Crop Name" required />
-        <input type="text" id="region" placeholder="Region" required />
-        <input type="text" id="price" placeholder="Price" required />
-        <input type="url" id="cropImage" placeholder="Optional Image URL" />
-        <button type="submit">Upload Crop</button>
-      </form>
-      <div id="cropsList"></div>
-      <div id="ordersList"></div>
-      <div class="crop-grid" id="cropListings">
-        <!-- Listings populated dynamically -->
-      </div>
-    </section>
+<!-- 🌾 Market Listings -->
+<section class="market">
+  <div class="market-header">
+    <h3>🛒 Market Listings</h3>
+    <p class="subtitle">Upload your crops and connect with buyers instantly</p>
+  </div>
 
-    <!-- Tips -->
-    <section class="tips">
-      <h3>💡 Farming Tips & Advice</h3>
-      <input type="text" placeholder="Search tips by category..." class="search-input"/>
-      <div class="tips-list" id="tipsList">
-        <!-- Tips dynamically inserted here -->
-      </div>
-      <button class="btn">➕ Post Tip</button>
-    </section>
+  <form id="cropForm" class="market-form">
+    <div class="form-group">
+      <label for="cropName">🌱 Crop Name</label>
+      <input type="text" id="cropName" placeholder="e.g., Maize, Tomatoes" required />
+    </div>
 
-    <!-- Location & Weather -->
+    <div class="form-group">
+      <label for="region">📍 Region</label>
+      <input type="text" id="region" placeholder="e.g., Ashanti, Volta" required />
+    </div>
+
+    <div class="form-group">
+      <label for="price">💰 Price (GHS)</label>
+      <input type="number" id="price" placeholder="e.g., 50.00" min="0" step="0.01" required />
+    </div>
+
+    <div class="form-group">
+      <label for="cropImage">📷 Upload Image</label>
+      <input type="file" id="cropImage" accept="image/*" required />
+    </div>
+
+    <button type="submit" class="upload-btn">+ Upload Crop</button>
+  </form>
+  <div id="cropSuccessMsg" style="display:none; margin:16px 0; padding:12px; background:#e0f7fa; color:#00695c; border-radius:6px; font-weight:500; text-align:center;">
+    <!-- Success message will appear here -->
+  </div>
+</section>
+
+<!-- Add this section below your Market Listings section -->
+<section class="buyers-list" style="margin: 32px 0;">
+  <h3 id="chatListTitle"></h3>
+  <div id="buyersChatList" style="display: flex; flex-wrap: wrap; gap: 12px;"></div>
+  <div id="roleLabel" style="margin-top:12px; font-weight:600; color:#007b5f;"></div>
+</section>
+
+    <!-- Weather -->
     <section class="location-weather">
-      <h3>📍 Location & Weather</h3>
       <div class="location-weather-wrapper">
-        <div class="map" id="map">🗺️ Loading map...</div>
+       
         <div class="weather" id="weather">🌦️ Loading weather...</div>
       </div>
     </section>
 
-    <!-- Profile -->
-    <section class="profile" id="profile">
-      <h3>👤 Profile Management</h3>
-      <form>
-        <input type="text" placeholder="Full Name"/>
-        <input type="text" placeholder="Farm Type"/>
-        <input type="text" placeholder="Location"/>
-        <input type="password" placeholder="Change Password"/>
-        <input type="file"/>
-        <button class="btn">Update Profile</button>
-      </form>
-    </section>
-
-    <!-- Analytics -->
-    <section class="analytics">
-      <h3>📈 Reports & Analytics</h3>
-      <div class="report-box">
-        <p>Weekly Sales: <strong>GHS 1,200</strong></p>
-        <p>Monthly Sales: <strong>GHS 5,300</strong></p>
-        <p>Most Demanded Crop: <strong>Maize</strong></p>
-        <p>Buyer Engagements: <strong>18</strong></p>
-      </div>
-    </section>
   </main>
 
   <footer>
@@ -102,12 +151,191 @@
   <!-- Firebase SDKs (must be above your app.js) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- Your Firebase config -->
   <script src="firebase/config.js"></script>
 
   <!-- Your custom JavaScript file -->
   <script src="js/app.js"></script>
+
+  <script>
+  document.getElementById('cropForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const user = firebase.auth().currentUser;
+    if (!user) return alert("You must be logged in.");
+
+    const cropName = document.getElementById('cropName').value.trim();
+    const region = document.getElementById('region').value.trim();
+    const price = parseFloat(document.getElementById('price').value.trim());
+    const imageInput = document.getElementById('cropImage');
+    const imageFile = imageInput.files[0];
+
+    // Professional validation
+    if (!cropName || !region || isNaN(price) || price < 0) {
+      alert("Please fill all required fields with valid data.");
+      return;
+    }
+    if (!imageFile) {
+      alert("Please select an image for your crop.");
+      return;
+    }
+    if (!imageFile.type.startsWith('image/')) {
+      alert("Only image files are allowed.");
+      return;
+    }
+    if (imageFile.size > 2 * 1024 * 1024) { // 2MB limit
+      alert("Image size should not exceed 2MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const base64Image = event.target.result;
+      firebase.firestore().collection("crops").add({
+        name: cropName,
+        location: region,
+        price: price,
+        imageBase64: base64Image,
+        farmerId: user.uid,
+        createdAt: new Date()
+      }).then(() => {
+        // Show professional confirmation message
+        const msgDiv = document.getElementById('cropSuccessMsg');
+        msgDiv.textContent = "✅ Crop uploaded successfully! Your listing is now live in the market.";
+        msgDiv.style.display = "block";
+        document.getElementById('cropForm').reset();
+        setTimeout(() => {
+          msgDiv.style.display = "none";
+        }, 4000);
+      }).catch(err => {
+        alert("Failed to upload crop: " + err.message);
+      });
+    };
+    reader.onerror = function() {
+      alert("Failed to read image file.");
+    };
+    reader.readAsDataURL(imageFile);
+  });
+
+  // Dynamically set the chat link to the first buyer found
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    firebase.firestore().collection("users")
+      .where("role", "==", "buyer")
+      .limit(1)
+      .get()
+      .then(snapshot => {
+        if (!snapshot.empty) {
+          const buyer = snapshot.docs[0];
+          const chatLink = document.getElementById("chatWithBuyerLink");
+          if (chatLink) {
+            chatLink.href = `chat.html?to=${buyer.id}`;
+          }
+        }
+      });
+  }
+});
+
+// Show chat list title and buttons based on user role
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    firebase.firestore().collection("users").doc(user.uid).get().then(doc => {
+      if (!doc.exists) return;
+      const role = doc.data().role;
+      const chatListTitle = document.getElementById("chatListTitle");
+      const buyersDiv = document.getElementById("buyersChatList");
+      const roleLabel = document.getElementById("roleLabel");
+      if (!chatListTitle || !buyersDiv || !roleLabel) return;
+
+      if (role === "farmer") {
+        chatListTitle.textContent = "💬 Chat with Buyers";
+        roleLabel.textContent = "You are logged in as: Farmer";
+        firebase.firestore().collection("users")
+          .where("role", "==", "buyer")
+          .get()
+          .then(snapshot => {
+            buyersDiv.innerHTML = "";
+            let count = 0;
+            snapshot.forEach(doc => {
+              if (doc.id === user.uid) return; // skip self if present
+              // Prevent duplicate buttons for the same user
+              if (buyersDiv.querySelector(`[data-uid="${doc.id}"]`)) return;
+              const buyer = doc.data();
+              const buyerId = doc.id;
+              const btn = document.createElement("button");
+              btn.setAttribute("data-uid", buyerId);
+              btn.textContent = `Chat with ${buyer.fullName || buyer.displayName || buyer.email || "Buyer"}`;
+              btn.style.background = "#007b5f";
+              btn.style.color = "#fff";
+              btn.style.border = "none";
+              btn.style.borderRadius = "6px";
+              btn.style.padding = "8px 16px";
+              btn.style.cursor = "pointer";
+              btn.onclick = function() {
+                window.location.href = `chat.html?to=${buyerId}`;
+              };
+              buyersDiv.appendChild(btn);
+              count++;
+            });
+            if (count === 0) {
+              buyersDiv.innerHTML = "<span style='color:#888;'>No buyers found.</span>";
+            }
+          })
+          .catch(err => {
+            buyersDiv.innerHTML = "<span style='color:red;'>Failed to load buyers: " + err.message + "</span>";
+          });
+      } else if (role === "buyer") {
+        chatListTitle.textContent = "💬 Chat with Farmers";
+        roleLabel.textContent = "You are logged in as: Buyer";
+        firebase.firestore().collection("users")
+          .where("role", "==", "farmer")
+          .get()
+          .then(snapshot => {
+            buyersDiv.innerHTML = "";
+            let count = 0;
+            snapshot.forEach(doc => {
+              if (doc.id === user.uid) return; // skip self if present
+              // Prevent duplicate buttons for the same user
+              if (buyersDiv.querySelector(`[data-uid="${doc.id}"]`)) return;
+              const farmer = doc.data();
+              const farmerId = doc.id;
+              const btn = document.createElement("button");
+              btn.setAttribute("data-uid", farmerId);
+              btn.textContent = `Chat with ${farmer.fullName || farmer.displayName || farmer.email || "Farmer"}`;
+              btn.style.background = "#007b5f";
+              btn.style.color = "#fff";
+              btn.style.border = "none";
+              btn.style.borderRadius = "6px";
+              btn.style.padding = "8px 16px";
+              btn.style.cursor = "pointer";
+              btn.onclick = function() {
+                window.location.href = `chat.html?to=${farmerId}`;
+              };
+              buyersDiv.appendChild(btn);
+              count++;
+            });
+            if (count === 0) {
+              buyersDiv.innerHTML = "<span style='color:#888;'>No farmers found.</span>";
+            }
+          })
+          .catch(err => {
+            buyersDiv.innerHTML = "<span style='color:red;'>Failed to load farmers: " + err.message + "</span>";
+          });
+      } else {
+        chatListTitle.textContent = "";
+        buyersDiv.innerHTML = "";
+        roleLabel.textContent = "";
+      }
+    });
+  }
+});
+
+// Optional: function to start chat with a specific buyer (if you want to add chat buttons elsewhere)
+function startChatWithBuyer(buyerId) {
+  window.location.href = `chat.html?to=${buyerId}`;
+  }
+  </script>
 
   <!-- Logout & Auth Handling Script -->
   <script>
@@ -135,4 +363,5 @@
   </script>
 
 </body>
+</html>
 </html>

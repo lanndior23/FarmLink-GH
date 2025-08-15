@@ -88,6 +88,24 @@
     a:hover {
       text-decoration: underline;
     }
+
+    @media (max-width: 500px) {
+      .container {
+        padding: 16px;
+        max-width: 98vw;
+      }
+      h2 {
+        font-size: 1.2rem;
+      }
+      input, button {
+        font-size: 0.98rem;
+        padding: 10px;
+      }
+      .role-selection {
+        flex-direction: column;
+        gap: 8px;
+      }
+    }
   </style>
 </head>
 <body>

@@ -147,6 +147,34 @@
       font-style: italic;
       color: gray;
     }
+    @media (max-width: 700px) {
+      .container {
+        padding: 4px;
+      }
+      .crop-list {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .crop-item {
+        padding: 10px;
+        font-size: 0.98em;
+      }
+      .stats {
+        flex-direction: column;
+        gap: 8px;
+      }
+      h1, h2 {
+        font-size: 1.2em;
+      }
+      .order-page-btn a button {
+        width: 100%;
+        font-size: 1em;
+      }
+      .nav-bar {
+        padding: 6px 4px;
+        font-size: 1em;
+      }
+    }
   </style>
 </head>
 <body>
@@ -166,8 +194,8 @@
   <div class="container">
     <div class="welcome">👋 Hello, <span id="usernameDashboard">Buyer</span></div>
 
-    <div class="order-page-btn">
-      <a href="order.html">
+    <div class="order-history-page-btn">
+      <a href="order-history.html">
         <button>🛒 Go to Order Page</button>
       </a>
     </div>
@@ -181,49 +209,9 @@
       </div>
     </div>
 
- <h2>🛒 All Available Crops</h2>
-<div id="cropList" class="crop-list">
-  <div class="crop-item">🌾 Maize</div>
-  <div class="crop-item">🌾 Rice</div>
-  <div class="crop-item">🌾 Millet</div>
-  <div class="crop-item">🌾 Sorghum</div>
-  <div class="crop-item">🌿 Cassava</div>
-  <div class="crop-item">🍠 Yam</div>
-  <div class="crop-item">🍠 Cocoyam</div>
-  <div class="crop-item">🍠 Sweet Potato</div>
-  <div class="crop-item">🍌 Plantain</div>
-  <div class="crop-item">🍌 Banana</div>
-  <div class="crop-item">🥭 Mango</div>
-  <div class="crop-item">🍍 Pineapple</div>
-  <div class="crop-item">🍈 Papaya</div>
-  <div class="crop-item">🍊 Orange</div>
-  <div class="crop-item">🍉 Watermelon</div>
-  <div class="crop-item">🥑 Avocado</div>
-  <div class="crop-item">🥥 Coconut</div>
-  <div class="crop-item">🍅 Tomatoes</div>
-  <div class="crop-item">🍆 Garden Eggs</div>
-  <div class="crop-item">🌶️ Okra</div>
-  <div class="crop-item">🌶️ Pepper</div>
-  <div class="crop-item">🥬 Cabbage</div>
-  <div class="crop-item">🥕 Carrots</div>
-  <div class="crop-item">🧅 Onion</div>
-  <div class="crop-item">🥬 Lettuce</div>
-  <div class="crop-item">🥒 Cucumber</div>
-  <div class="crop-item">🥜 Groundnut</div>
-  <div class="crop-item">🌱 Cowpea</div>
-  <div class="crop-item">🌱 Soybean</div>
-  <div class="crop-item">🍫 Cocoa</div>
-  <div class="crop-item">🌴 Oil Palm</div>
-  <div class="crop-item">☕ Coffee</div>
-  <div class="crop-item">🧵 Cotton</div>
-  <div class="crop-item">🌳 Rubber</div>
-  <div class="crop-item">🥥 Shea Nuts</div>
-  <div class="crop-item">🌶️ Ginger</div>
-  <div class="crop-item">🧄 Garlic</div>
-  <div class="crop-item">🟡 Turmeric</div>
-  <div class="crop-item">🌿 Basil</div>
-  <div class="crop-item">🌿 Mint</div>
-</div>
+<h2>🛒 All Available Crops</h2>
+<div id="noCropsMsg" class="empty-message"></div>
+<div id="cropList" class="crop-list"></div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -249,17 +237,26 @@
 
               const db = firebase.firestore();
 
-              db.collection("crops").get().then(snapshot => {
+              db.collection("crops").onSnapshot(snapshot => {
+                cropList.innerHTML = "";
                 if (snapshot.empty) {
                   noCropsMsg.textContent = "No crops available at the moment.";
                 } else {
-                  noCropsMsg.remove();
+                  noCropsMsg.textContent = "";
                   snapshot.forEach(doc => {
                     const data = doc.data();
                     const item = document.createElement('div');
                     item.className = 'crop-item';
 
-                    const imageUrl = data.imageUrl || 'assets/default-crop.jpg';
+                    // Prefer imageBase64, fallback to imageUrl, then default image
+                    let imageUrl = '';
+                    if (data.imageBase64) {
+                      imageUrl = data.imageBase64;
+                    } else if (data.imageUrl) {
+                      imageUrl = data.imageUrl;
+                    } else {
+                      imageUrl = 'assets/default-crop.jpg';
+                    }
 
                     item.innerHTML = `
                       <img src="${imageUrl}" alt="${data.name}" />
@@ -270,8 +267,8 @@
                       </div>
                       <div class="order-box">
                         <input type="number" min="1" placeholder="kg" id="qty-${doc.id}" />
-                        <button onclick="placeOrder('${doc.id}', '${data.name}', ${data.price}, '${data.farmerId}')">Order</button>
-                        <button class="chat-btn" onclick="startChat('${data.farmerId}')">💬 Chat</button>
+                        <button onclick="placeOrder('${doc.id}', '${data.name}', ${data.price})">Order</button>
+                        <button class="chat-btn" onclick="startChat('${data.farmerId || data.userId || ""}')">💬 Chat</button>
                       </div>
                     `;
                     cropList.appendChild(item);
@@ -314,30 +311,49 @@
     }
 
     function startChat(farmerId) {
-      window.location.href = `chat.html?farmerId=${farmerId}`;
+      const user = firebase.auth().currentUser;
+      if (!farmerId || (user && farmerId === user.uid)) {
+        alert("You cannot chat with yourself.");
+        return;
+      }
+      window.location.href = `chat.html?to=${farmerId}`;
     }
 
-    function placeOrder(cropId, cropName, pricePerKg, farmerId) {
+    function placeOrder(cropId, cropName, pricePerKg) {
       const qtyInput = document.getElementById(`qty-${cropId}`);
       const quantity = parseFloat(qtyInput.value);
       if (!quantity || quantity <= 0) return alert("Please enter a valid quantity.");
       const user = firebase.auth().currentUser;
       if (!user) return;
 
-      firebase.firestore().collection("orders").add({
-        buyerId: user.uid,
-        cropId,
-        cropName,
-        farmerId,
-        quantity,
-        totalPrice: pricePerKg * quantity,
-        status: "Pending",
-        createdAt: new Date()
-      }).then(() => {
-        alert("✅ Order placed successfully!");
-        location.reload();
-      }).catch(err => {
-        alert("❌ Failed to place order: " + err.message);
+      // Fetch crop to get the correct farmerId/userId
+      firebase.firestore().collection("crops").doc(cropId).get().then(doc => {
+        if (!doc.exists) {
+          alert("Crop not found.");
+          return;
+        }
+        const cropData = doc.data();
+        const farmerId = cropData.farmerId || cropData.userId || "";
+        if (!farmerId) {
+          alert("Farmer not found for this crop.");
+          return;
+        }
+
+        firebase.firestore().collection("orders").add({
+          buyerId: user.uid,
+          cropId,
+          cropName,
+          farmerId,
+          quantity,
+          totalPrice: pricePerKg * quantity,
+          status: "Pending",
+          createdAt: new Date()
+        }).then(() => {
+          alert("✅ Order placed successfully!");
+          location.reload();
+        }).catch(err => {
+          alert("❌ Failed to place order: " + err.message);
+        });
       });
     }
 
@@ -346,15 +362,21 @@
       if (user) {
         firebase.firestore().collection("users")
           .where("role", "==", "farmer")
-          .limit(1)
           .get()
           .then(snapshot => {
-            if (!snapshot.empty) {
-              const targetUser = snapshot.docs[0];
-              const chatLink = document.getElementById("chatLink");
-              if (chatLink) {
-                chatLink.href = `chat.html?to=${targetUser.id}`;
+            // Only show chat links for other users, not self
+            const chatLink = document.getElementById("chatLink");
+            let found = false;
+            snapshot.forEach(doc => {
+              if (doc.id !== user.uid && !found) {
+                if (chatLink) {
+                  chatLink.href = `chat.html?to=${doc.id}`;
+                  found = true;
+                }
               }
+            });
+            if (!found && chatLink) {
+              chatLink.style.display = "none";
             }
           });
       }

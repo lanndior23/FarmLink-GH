@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Crops – FarmLink GH</title>
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="icon" href="/assets/icon.ico">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 0;
+      color: #222;
+    }
+    header {
+      background: #007b5f;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 30px auto;
+      padding: 20px;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+    h2 {
+      color: #007b5f;
+      margin-bottom: 24px;
+    }
+    .crop-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+    }
+    .crop-item {
+      background: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: box-shadow 0.2s;
+    }
+    .crop-item:hover {
+      box-shadow: 0 4px 12px rgba(0,123,95,0.10);
+    }
+    .crop-item img {
+      width: 100%;
+      max-width: 220px;
+      border-radius: 8px;
+      max-height: 140px;
+      object-fit: cover;
+      margin-bottom: 12px;
+      background: #e0e0e0;
+    }
+    .crop-item h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.15rem;
+      color: #222;
+    }
+    .crop-details {
+      font-size: 0.98rem;
+      color: #444;
+      margin-bottom: 6px;
+    }
+    .location-badge {
+      background: #e0f2f1;
+      color: #007b5f;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 0.85rem;
+      display: inline-block;
+      margin-top: 4px;
+    }
+    .empty-message {
+      text-align: center;
+      font-style: italic;
+      color: #888;
+      margin-top: 40px;
+    }
+    .delete-btn {
+      margin-top: 10px;
+      background: #ff4d4f;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    .delete-btn:hover {
+      background: #d9363e;
+    }
+    @media (max-width: 700px) {
+      .container {
+        padding: 8px;
+        margin: 10px 0;
+      }
+      .crop-list {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .crop-item {
+        padding: 10px;
+        font-size: 0.98em;
+      }
+      h1, h2 {
+        font-size: 1.2em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🌾 All Crops – FarmLink GH</h1>
+  </header>
+  <div class="container">
+    <h2>Available Crops</h2>
+    <div id="noCropsMsg" class="empty-message"></div>
+    <div id="cropList" class="crop-list"></div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase/config.js"></script>
+  <script>
+    // Listen for auth state
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const db = firebase.firestore();
+        const cropsList = document.getElementById("cropList");
+        const noCropsMsg = document.getElementById("noCropsMsg");
+
+        // Delete crop function
+        window.deleteCrop = async function(docId) {
+          if (confirm("Are you sure you want to delete this crop?")) {
+            try {
+              await db.collection("crops").doc(docId).delete();
+              alert("Crop deleted successfully!");
+            } catch (err) {
+              console.error("Delete error:", err);
+              alert("Failed to delete crop. Please try again.");
+            }
+          }
+        };
+
+        // Real-time crop listing
+        db.collection("crops").orderBy("createdAt", "desc").onSnapshot(snapshot => {
+          cropsList.innerHTML = "";
+          if (snapshot.empty) {
+            noCropsMsg.textContent = "No crops available at the moment.";
+            noCropsMsg.style.display = "";
+          } else {
+            noCropsMsg.style.display = "none";
+            snapshot.forEach(doc => {
+              const crop = doc.data();
+              const imageUrl = crop.imageBase64 || crop.imageUrl || "assets/default-crop.jpg";
+              // Check both farmerId and userId for ownership
+              const showDelete = (crop.farmerId === user.uid) || (crop.userId === user.uid);
+
+              const cropItem = document.createElement("div");
+              cropItem.className = "crop-item";
+              cropItem.innerHTML = `
+                <img src="${imageUrl}" alt="${crop.name}" />
+                <h3>${crop.name}</h3>
+                <div class="crop-details">
+                  Price: ₵${crop.price} per kg<br/>
+                  <span class="location-badge">${crop.location || crop.region || ""}</span>
+                </div>
+                ${showDelete ? `<button class="delete-btn" onclick="deleteCrop('${doc.id}')">Delete</button>` : ""}
+              `;
+              cropsList.appendChild(cropItem);
+            });
+          }
+        });
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -80,6 +80,16 @@
       font-weight: bold;
       color: #0077cc;
     }
+
+    .delete-button {
+      margin-left: 10px;
+      background: #dc3545;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 5px 10px;
+    }
   </style>
 </head>
 <body>
@@ -116,6 +126,7 @@
     if (!to) {
       alert("No chat user specified.");
       window.location.href = "buyer_dashboard.html";
+      return; // Stop further script execution if no user specified
     }
 
     auth.onAuthStateChanged(async user => {
@@ -130,25 +141,50 @@
       const userData = userDoc.data();
       receiverName.textContent = `Chatting with: ${userData.fullName || 'User'}`;
 
-      // Fetch & display messages
+      // Ensure participants array is always sorted for consistency
+      const participants = [from, to].sort((a, b) => a.localeCompare(b));
+
+      // Fetch & display messages between the two users only
       db.collection("messages")
         .where("participants", "array-contains", from)
         .orderBy("timestamp")
         .onSnapshot(snapshot => {
           chatBox.innerHTML = "";
+          let found = false;
           snapshot.forEach(doc => {
             const msg = doc.data();
+            // Only show messages where participants contain both from and to
             if (
-              (msg.from === from && msg.to === to) ||
-              (msg.from === to && msg.to === from)
+              Array.isArray(msg.participants) &&
+              msg.participants.includes(from) &&
+              msg.participants.includes(to)
             ) {
+              found = true;
               const msgDiv = document.createElement("div");
               msgDiv.classList.add("message");
               msgDiv.classList.add(msg.from === from ? "sent" : "received");
               msgDiv.textContent = msg.text;
+
+              // Add delete button for sender's messages
+              if (msg.from === from) {
+                const delBtn = document.createElement("button");
+                delBtn.textContent = "Delete";
+                delBtn.classList.add("delete-button");
+                delBtn.onclick = async () => {
+                  if (confirm("Delete this message?")) {
+                    await db.collection("messages").doc(doc.id).delete();
+                  }
+                };
+                msgDiv.appendChild(delBtn);
+              }
+
               chatBox.appendChild(msgDiv);
             }
           });
+
+          if (!found) {
+            chatBox.innerHTML = "<div style='color:#888;text-align:center;'>No messages yet or failed to fetch.</div>";
+          }
 
           chatBox.scrollTop = chatBox.scrollHeight;
         });
@@ -160,18 +196,28 @@
         const message = chatInput.value.trim();
         if (message === "") return;
 
+        // Always store participants as a sorted array (by UID)
+        const sortedParticipants = [from, to].sort((a, b) => a.localeCompare(b));
         await db.collection("messages").add({
           from: from,
           to: to,
           text: message,
-          participants: [from, to],
+          participants: sortedParticipants,
           timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          chatInput.value = "";
+        }).catch(err => {
+          alert("Failed to send message: " + err.message);
         });
 
         localStorage.setItem("lastSeenMessageId", Date.now().toString());
-        chatInput.value = "";
       });
     });
   </script>
 </body>
+</html>
+</html>
+  </script>
+</body>
+</html>
 </html>
